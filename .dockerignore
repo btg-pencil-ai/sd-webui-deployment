@@ -5,6 +5,7 @@
 .slsignore
 
 data/**/*
+sample
 
 resources/**/*
 .ipynb_checkpoints
