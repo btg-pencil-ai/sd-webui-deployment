@@ -20,7 +20,6 @@ INFO/**/*
 inputs
 
 outputs
-*.sh
 *.ipynb
 exclude
 .coverage
