@@ -1,6 +1,10 @@
 import os
-from logging import getLogger
+import logging
+
 from huggingface_hub import hf_hub_download
+
+
+logging.basicConfig(level = logging.INFO)
 
 
 MAIN_MODELS_PATH=os.environ.get("MAIN_MODELS_PATH", 
@@ -9,7 +13,7 @@ CONTROLNET_EXTENSION_MODELS_PATH=os.environ.get("CONTROLNET_EXTENSION_MODELS_PAT
                                                 "/stable-diffusion-webui/extensions/sd-webui-controlnet/models")
 
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 STABLE_DIFFUSION_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Stable-diffusion")
 VAE_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "VAE")
