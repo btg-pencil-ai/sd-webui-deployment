@@ -18,6 +18,7 @@ LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4" python3 launch.py \
     --no-half-vae \
     --skip-prepare-environment \
     --skip-install \
+    --no-download-sd-model \
     --medvram \
     --medvram-sdxl \
     --api \
