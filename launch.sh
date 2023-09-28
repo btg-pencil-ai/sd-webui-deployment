@@ -28,6 +28,7 @@ LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4" python3 launch.py \
     --medvram-sdxl \
     --api \
     --listen \
+    --timeout-keep-alive 300 \
     --port 7860
 
 # TODO - supposed to expose v1/server-kill, server-restart, server-stop
