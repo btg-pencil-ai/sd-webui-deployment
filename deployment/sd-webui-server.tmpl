@@ -3,10 +3,10 @@ kind: Deployment
 metadata:
   name: sd-webui-server
 spec:
-  selector:
+  selector:1
     matchLabels:
       component: sd-webui-server
-  replicas: ${POD_REPLICAS_SD_WEBUI_WORKER}
+  replicas: ${POD_REPLICAS_SD_WEBUI_SERVER}
   template:
     metadata:
       labels:
