@@ -13,7 +13,7 @@ spec:
         component: sd-webui-server
     spec:
       nodeSelector:
-        intent: apps
+        intent: gpu-machines
       volumes:
       - name: sd-webui-pv
         persistentVolumeClaim:
@@ -36,11 +36,11 @@ spec:
             subPath: sd-webui-controlnet-models
         resources:
           requests:
-            cpu: 2000m
-            memory: 6Gi
+            cpu: 4000m
+            memory: 16Gi
           limits:
-            cpu: 2000m
-            memory: 6Gi
+            cpu: 4000m
+            memory: 16Gi
    
 ---
 apiVersion: v1
