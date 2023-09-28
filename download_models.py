@@ -45,7 +45,8 @@ class HuggingFaceModelDownloader():
                 hf_hub_download(
                     repo_id=repo_id,
                     filename=filename,
-                    local_dir=model['filepath']
+                    local_dir=model['filepath'],
+                    local_dir_use_symlinks=False  # see https://github.com/huggingface/diffusers/issues/2886 
                 )
                 logger.info(f"{filename} downloaded successfully")
             except Exception as e:

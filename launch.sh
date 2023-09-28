@@ -7,6 +7,11 @@ for IFOLDER in Codeformer  ControlNet  ESRGAN  GFPGAN  LDSR  Lora  Stable-diffus
     mkdir -p ${MAIN_MODELS_PATH}/${IFOLDER}
 done
 
+# Create HF_HOME that we can mount to persistent volume during deployment. We won't normally use it, but we should have it
+# in case there are pipelines outside our control that stubbornly calls huggingface to download models
+export HF_HOME=${HF_HOME:="/hf-home"}
+mkdir -p ${HF_HOME}
+
 # Run any prep scripts to check & download models here - feel free to use env vars to parametrize paths
 # Please check if sdwebui already has functions to auto-download models if not present, if they do then we don't need to do it
 python3 download_models.py

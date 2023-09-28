@@ -26,6 +26,9 @@ spec:
         command: 
         volumeMounts:
           - name: sd-webui-pv
+            mountPath: /hf-home
+            subPath: sd-webui-hf-home
+          - name: sd-webui-pv
             mountPath: /stable-diffusion-webui/models/
             subPath: sd-webui-models
           - name: sd-webui-pv
