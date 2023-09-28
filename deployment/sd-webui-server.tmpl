@@ -17,11 +17,12 @@ spec:
       volumes:
       - name: sd-webui-pv
         persistentVolumeClaim:
-          claimName: export-pvc
+          claimName: ${PERSISTENT_VOLUME_CLAIM_NAME}
       containers:
       - name: sd-webui-server
         image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
         imagePullPolicy: Always
+        tty: true
         volumeMounts:
           - name: sd-webui-pv
             mountPath: /stable-diffusion-webui/models/
@@ -37,49 +38,5 @@ spec:
             cpu: 2000m
             memory: 6Gi
         env:
-          - name: WORKER_NAME
-            value: "genai_worker"
-          - name: RABBIT_URL
-            value: "${RABBIT_URL}"
-          - name: NEX_RABBIT_URL
-            value: "${NEX_RABBIT_URL}"
-          - name: EXCHANGE_NAME
-            value: "pencil_exchange"
-          - name: AWS_ACCESS_KEY_ID
-            value: "${AWS_ACCESS_KEY_ID}"
-          - name: AWS_SECRET_ACCESS_KEY
-            value: "${AWS_SECRET_ACCESS_KEY}"
-          - name: AWS_REGION
-            value: "${AWS_REGION}"
-          - name: AWS_DEFAULT_REGION
-            value: "${AWS_DEFAULT_REGION}"
-          - name: AWS_S3_BUCKET
-            value: "${AWS_S3_BUCKET}"
-          - name: OPTIMIZELY_API_TOKEN
-            value: "${OPTIMIZELY_API_TOKEN}"
-          - name: DB_HOST
-            value: "${DB_HOST}"
-          - name: DB_PORT
-            value: "${DB_PORT}"
-          - name: DB_USERNAME
-            value: "${DB_USERNAME}"
-          - name: DB_PASSWORD
-            value: "${DB_PASSWORD}"
-          - name: DB_CAMPAIGN_NAME
-            value: "${DB_CAMPAIGN_NAME}"
-          - name: DB_VISUAL_NAME
-            value: "${DB_VISUAL_NAME}"
-          - name: DB_COPY_NAME
-            value: "${DB_COPY_NAME}"
-          - name: DB_INTEGRATIONS_NAME
-            value: "${DB_INTEGRATIONS_NAME}"
-          - name: OPENAI_API_KEY
-            value: "${OPENAI_API_KEY}"
-          - name: REDIS_HOST
-            value: "${REDIS_HOST}"
-          - name: REDIS_PORT
-            value: "${REDIS_PORT}"
-          - name: REDIS_DB
-            value: "${REDIS_DB}"
           - name: JWT_SECRET
             value: "${JWT_SECRET}"      
