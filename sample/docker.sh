@@ -18,10 +18,9 @@ mkdir -p ${MOUNT_MAIN_MODELS_PATH}
 mkdir -p ${MOUNT_CONTROLNET_EXTENSION_MODELS_PATH}
 
 # Run with network host, gpu, and mount points
-docker run --rm -it \
+docker run --rm -t -d \
     --network host \
     --gpus all \
     -v ${MOUNT_MAIN_MODELS_PATH}:${MAIN_MODELS_PATH} \
     -v ${MOUNT_CONTROLNET_EXTENSION_MODELS_PATH}:${CONTROLNET_EXTENSION_MODELS_PATH} \
-    ${DOCKER_IMAGE_NAME} \
-    /bin/bash
+    ${DOCKER_IMAGE_NAME}

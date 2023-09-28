@@ -13,4 +13,15 @@ python3 download_models.py
 
 # Run and listen to port in API mode
 cd /stable-diffusion-webui
-LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4" python3 launch.py --xformers --no-half-vae --no-half --api --listen
+LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4" python3 launch.py \
+    --xformers \
+    --no-half-vae \
+    --skip-prepare-environment \
+    --skip-install \
+    --medvram \
+    --medvram-sdxl \
+    --api \
+    --listen
+
+# TODO - supposed to expose v1/server-kill, server-restart, server-stop
+# --api-server-stop
