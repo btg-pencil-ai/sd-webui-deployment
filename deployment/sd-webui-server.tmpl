@@ -23,6 +23,7 @@ spec:
         image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
         imagePullPolicy: Always
         tty: true
+        command: 
         volumeMounts:
           - name: sd-webui-pv
             mountPath: /stable-diffusion-webui/models/
@@ -37,6 +38,17 @@ spec:
           limits:
             cpu: 2000m
             memory: 6Gi
-        env:
-          - name: JWT_SECRET
-            value: "${JWT_SECRET}"      
+   
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sd-webui-server
+spec:
+  type: ClusterIP
+  selector:
+    component: sd-webui-server
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 7860
