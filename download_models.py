@@ -3,13 +3,10 @@ from logging import getLogger
 from huggingface_hub import hf_hub_download
 
 
-# MAIN_MODELS_PATH=os.environ.get("MAIN_MODELS_PATH", 
-#                                 "/stable-diffusion-webui/models")
-# CONTROLNET_EXTENSION_MODELS_PATH=os.environ.get("CONTROLNET_EXTENSION_MODELS_PATH", 
-#                                                 "/stable-diffusion-webui/extensions/sd-webui-controlnet/models")
-
-MAIN_MODELS_PATH = '/home/adithya/Projects/Pencil/sd-webui-deployment/models/models'
-CONTROLNET_EXTENSION_MODELS_PATH = '/home/adithya/Projects/Pencil/sd-webui-deployment/models/controlnet/models'
+MAIN_MODELS_PATH=os.environ.get("MAIN_MODELS_PATH", 
+                                "/stable-diffusion-webui/models")
+CONTROLNET_EXTENSION_MODELS_PATH=os.environ.get("CONTROLNET_EXTENSION_MODELS_PATH", 
+                                                "/stable-diffusion-webui/extensions/sd-webui-controlnet/models")
 
 logger = getLogger(__name__)
 
