@@ -1,4 +1,5 @@
 #!/bin/bash
+START_PROXY_WORKER=${START_PROXY_WORKER:=false}
 
 # build docker image first in ./sd-webui-deployment dir (docker build -t sd-webui-deployment:latest .)
 DOCKER_IMAGE_NAME="sd-webui-deployment:latest"
@@ -29,6 +30,10 @@ mkdir -p ${MOUNT_CODEFORMER_MODEL_PATH}
 docker run --rm -t -d \
     --network host \
     --gpus all \
+    -e START_PROXY_WORKER=${START_PROXY_WORKER} \
+    -e RABBIT_URL=${RABBIT_URL} \
+    -e EXCHANGE_NAME=${EXCHANGE_NAME} \
+    -e WORKER_NAME="sd_webui_proxy_worker" \
     -v ${MOUNT_HF_HOME}:${HF_HOME} \
     -v ${MOUNT_MAIN_MODELS_PATH}:${MAIN_MODELS_PATH} \
     -v ${MOUNT_CONTROLNET_EXTENSION_MODELS_PATH}:${CONTROLNET_EXTENSION_MODELS_PATH} \

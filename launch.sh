@@ -1,4 +1,5 @@
 #!/bin/bash
+START_PROXY_WORKER=${START_PROXY_WORKER:=false}
 
 MAIN_MODELS_PATH=${MAIN_MODELS_PATH:="/stable-diffusion-webui/models"}
 
@@ -29,7 +30,16 @@ LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4" python3 launch.py \
     --api \
     --listen \
     --timeout-keep-alive 300 \
-    --port 7860
+    --port 7860 &
 
 # TODO - supposed to expose v1/server-kill, server-restart, server-stop
 # --api-server-stop
+if ${START_PROXY_WORKER}; then
+    echo "Launching Proxy Worker"
+    python3 worker.py &
+fi
+
+wait -n
+
+# Exit with status of process that exited first
+exit $?

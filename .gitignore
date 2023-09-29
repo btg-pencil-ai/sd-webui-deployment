@@ -29,3 +29,5 @@ exclude
 /venv
 /tmp
 /cache_data
+
+.env

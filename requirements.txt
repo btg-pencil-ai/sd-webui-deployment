@@ -1,0 +1,4 @@
+pyjwt==1.7.1
+pika==0.13.1
+xformers
+accelerate
