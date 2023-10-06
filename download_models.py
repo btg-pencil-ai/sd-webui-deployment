@@ -37,6 +37,7 @@ class HuggingFaceModelDownloader():
             {'repo_id': 'lllyasviel/ControlNet-v1-1', 'filename': 'control_v11p_sd15_canny.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'lllyasviel/ControlNet-v1-1', 'filename': 'control_v11f1p_sd15_depth.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'lllyasviel/ControlNet-v1-1', 'filename': 'control_v11e_sd15_shuffle.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
+            {'repo_id': 'lllyasviel/sd_control_collection', 'filename': 'ip-adapter_xl.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
         ]
         
         for model in models_to_download:
