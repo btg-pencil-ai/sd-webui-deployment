@@ -19,17 +19,25 @@ python3 download_models.py
 # Run and listen to port in API mode
 cd /stable-diffusion-webui
 
-if [ "$SD_VERSION" = "SD15" ]; then
+if [ ${SD_VERSION} == "SD15" ]; then
     # Append flags for 'SD15'
-    LAUNCH_FLAGS="--ckpt /stable-diffusion-webui/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors \
-        --vae-path /stable-diffusion-webui/models/VAE/vae-ft-mse-840000-ema-pruned.ckpt"
-else
+    LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/v1-5-pruned-emaonly.safetensors \
+        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt"
+
+elif [ ${SD_VERSION} == "SDXL" ]; then
     # Append flags for other cases
-    LAUNCH_FLAGS="--ckpt /stable-diffusion-webui/models/Stable-diffusion/sd_xl_base_1.0.safetensors \
-        --vae-path /stable-diffusion-webui/models/VAE/sdxl_vae.safetensors"
+    LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/sd_xl_base_1.0.safetensors \
+        --vae-path ${MAIN_MODELS_PATH}/VAE/sdxl_vae.safetensors"
+
+else
+    echo "Invalid SD_VERSION ${SD_VERSION}"
+    exit 1
+
 fi
 
-LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4" python3 launch.py  $LAUNCH_FLAGS \
+echo "SD_VERSION set to ${SD_VERSION} with LAUNCH_FLAGS: ${LAUNCH_FLAGS}"
+
+LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4" python3 launch.py  ${LAUNCH_FLAGS} \
     --xformers \
     --no-half-vae \
     --skip-prepare-environment \
