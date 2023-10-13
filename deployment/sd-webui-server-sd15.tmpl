@@ -44,7 +44,10 @@ spec:
           limits:
             cpu: 7500m
             memory: 30Gi
-   
+        env:
+          - name: SD_VERSION
+            value: "SD15"
+            
 ---
 apiVersion: v1
 kind: Service
