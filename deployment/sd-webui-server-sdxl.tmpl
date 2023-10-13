@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sd-webui-server
+  name: sd-webui-server-sdxl
 spec:
   selector:
     matchLabels:
-      component: sd-webui-server
+      component: sd-webui-server-sdxl
   replicas: ${POD_REPLICAS_SD_WEBUI_SERVER}
   template:
     metadata:
       labels:
-        component: sd-webui-server
+        component: sd-webui-server-sdxl
     spec:
       nodeSelector:
         intent: gpu-machines
@@ -19,7 +19,7 @@ spec:
         persistentVolumeClaim:
           claimName: ${PERSISTENT_VOLUME_CLAIM_NAME}
       containers:
-      - name: sd-webui-server
+      - name: sd-webui-server-sdxl
         image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
         imagePullPolicy: Always
         tty: true
@@ -39,21 +39,24 @@ spec:
             subPath: sd-webui-codeformer-models
         resources:
           requests:
-            cpu: 8000m
-            memory: 32Gi
+            cpu: 7500m
+            memory: 28Gi
           limits:
-            cpu: 8000m
-            memory: 32Gi
-   
+            cpu: 7500m
+            memory: 28Gi
+        env:
+          - name: SD_VERSION
+            value: "SDXL"
+            
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: sd-webui-server
+  name: sd-webui-server-sdxl
 spec:
   type: ClusterIP
   selector:
-    component: sd-webui-server
+    component: sd-webui-server-sdxl
   ports:
   - protocol: TCP
     port: 80
