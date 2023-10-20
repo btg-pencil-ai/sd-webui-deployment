@@ -5,7 +5,7 @@ RUN apt update \
     && apt install google-perftools -y \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install xformers accelerate
+RUN pip install xformers==0.0.22 accelerate==0.21.0
 
 # Set HF_HOME just in case there are spurious pipelines outside our control that
 # use huggingface to download models - this ensures huggingface cache will download
