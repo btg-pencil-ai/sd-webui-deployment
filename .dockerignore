@@ -18,3 +18,5 @@ coverage
 reports
 tmp
 cache_data
+
+.env

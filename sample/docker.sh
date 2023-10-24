@@ -20,6 +20,7 @@ MOUNT_CODEFORMER_MODEL_PATH="/mnt/data/docker/sd-webui-codeformer-models"
 # Just in case there are pipelines outside our control that stubbornly downloads model using huggingface
 HF_HOME="/hf-home"  # this is already the default in the docker container but is also an ENV
 MOUNT_HF_HOME="/mnt/data/docker/sd-webui-hf-home"
+SD_VERSION=${SD_VERSION:="SDXL"}
 
 # Make local mount dirs if they don't exist
 mkdir -p ${MOUNT_MAIN_MODELS_PATH}
@@ -30,10 +31,7 @@ mkdir -p ${MOUNT_CODEFORMER_MODEL_PATH}
 docker run --rm -t -d \
     --network host \
     --gpus all \
-    -e START_PROXY_WORKER=${START_PROXY_WORKER} \
-    -e RABBIT_URL=${RABBIT_URL} \
-    -e EXCHANGE_NAME=${EXCHANGE_NAME} \
-    -e WORKER_NAME="sd_webui_proxy_worker" \
+    -e SD_VERSION=${SD_VERSION} \
     -v ${MOUNT_HF_HOME}:${HF_HOME} \
     -v ${MOUNT_MAIN_MODELS_PATH}:${MAIN_MODELS_PATH} \
     -v ${MOUNT_CONTROLNET_EXTENSION_MODELS_PATH}:${CONTROLNET_EXTENSION_MODELS_PATH} \

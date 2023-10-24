@@ -33,6 +33,11 @@ class HuggingFaceModelDownloader():
             {'repo_id': 'stabilityai/sd-vae-ft-mse-original', 'filename': 'vae-ft-mse-840000-ema-pruned.ckpt', 'filepath': VAE_MODELS_PATH},
             {'repo_id': 'lllyasviel/sd_control_collection', 'filename': 'diffusers_xl_canny_full.safetensors', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'lllyasviel/sd_control_collection', 'filename': 'sai_xl_depth_256lora.safetensors', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
+            {'repo_id': 'runwayml/stable-diffusion-v1-5', 'filename': 'v1-5-pruned-emaonly.safetensors', 'filepath': STABLE_DIFFUSION_MODELS_PATH},
+            {'repo_id': 'lllyasviel/ControlNet-v1-1', 'filename': 'control_v11p_sd15_canny.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
+            {'repo_id': 'lllyasviel/ControlNet-v1-1', 'filename': 'control_v11f1p_sd15_depth.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
+            {'repo_id': 'lllyasviel/ControlNet-v1-1', 'filename': 'control_v11e_sd15_shuffle.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
+            {'repo_id': 'lllyasviel/sd_control_collection', 'filename': 'ip-adapter_xl.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
         ]
         
         for model in models_to_download:
