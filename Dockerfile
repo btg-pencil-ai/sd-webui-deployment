@@ -2,7 +2,7 @@ FROM  louistrypencil/stable-diffusion-webui:nvidia-cuda-12.2.0-runtime-ubuntu22.
 
 # For TCMalloc
 RUN apt update \
-    && apt install google-perftools -y \
+    && apt install google-perftools curl jq -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install xformers==0.0.22 accelerate==0.21.0

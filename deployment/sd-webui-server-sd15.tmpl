@@ -47,7 +47,18 @@ spec:
         env:
           - name: SD_VERSION
             value: "SD15"
-            
+        livenessProbe:
+          httpGet:
+            path: /sdapi/v1/memory
+            port: 7860
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command: ["/bin/bash", "-c", "curl -s 'http://localhost:7860/sdapi/v1/progress' | jq -e '.state.job_count == 0'"]
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          
 ---
 apiVersion: v1
 kind: Service
