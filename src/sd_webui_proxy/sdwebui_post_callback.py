@@ -13,9 +13,10 @@ logger = get_logger()
 
 
 def sd_webui_post_callback_processor(params):
-    callback_routing_key = os.environ.get('SD_WEBUI_CALLBACK_ROUTING_KEY', '*.sdwebui.callback.processor')
-
     try:
+        callback_routing_key = os.environ.get("SD_WEBUI_CALLBACK_ROUTING_KEY", None)
+        assert callback_routing_key is not None, "callback_routing_key not provided"
+
         endpoint = params.get('endpoint', None)
         assert endpoint is not None, "endpoint is None"
 
@@ -28,7 +29,7 @@ def sd_webui_post_callback_processor(params):
         response = requests.post(full_endpoint, json=payload, timeout=300)
         response.raise_for_status()
         
-        amqp.publish(config.EXCHANGE_NAME, callback_routing_key, response.json(), None, 255)
+        amqp.publish(config.EXCHANGE_NAME, callback_routing_key, response.json(), None, 127)
         logger.info(f'Published to callback queue {callback_routing_key}')
     
     except Exception as e:

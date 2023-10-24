@@ -17,15 +17,20 @@ logger = get_logger(__name__)
 message_processor = None
 worker_name = None
 worker_info = {
-    'sd_webui_proxy_worker': {
+    'sd_webui_worker_sd15': {
         'message_processor': sd_webui_post_callback_processor,
-        'queue': os.environ.get('SD_WEBUI_PROXY_QUEUE', 'sd_webui_proxy_queue'),
-        'routing_key': os.environ.get('SD_WEBUI_PROXY_ROUTING_KEY', "*.sd_webui_proxy.submit")
+        'queue': os.environ.get('SD_WEBUI_WORKER_QUEUE', None),
+        'routing_key': os.environ.get('SD_WEBUI_WORKER_ROUTING_KEY', None)
+    },
+    'sd_webui_worker_sdxl': {
+        'message_processor': sd_webui_post_callback_processor,
+        'queue': os.environ.get('SD_WEBUI_WORKER_QUEUE', None),
+        'routing_key': os.environ.get('SD_WEBUI_WORKER_ROUTING_KEY', None)
     }
 }
 
 
-parser = argparse.ArgumentParser(description='SD WebUI Proxy Worker')
+parser = argparse.ArgumentParser(description='SD WebUI Worker')
 parser.add_argument('-w', '--worker', required=False, choices=worker_info.keys())
 
 
@@ -65,8 +70,7 @@ def process_message(params):
     logger.info('Received message:')
 
     logger.info(f"{sanitize_params_for_print(params, hide_jwt=True, hide_list=True)}")
-    params = {k: v for k, v in params.items() if k not in [
-        'queue_consumer', 'basic_deliver']}
+    params = {k: v for k, v in params.items() if k not in ['queue_consumer', 'basic_deliver']}
 
     try:
         if callable(message_processor):
@@ -96,7 +100,8 @@ def main():
     worker_name = args.get('worker', None)
 
     if worker_name is None:
-        worker_name = os.environ.get('WORKER_NAME')
+        worker_name = os.environ.get('WORKER_NAME', None)
+        assert worker_name is not None, "worker_name not provided"
 
     logger.info('--- Starting {} ---'.format(worker_name))
 

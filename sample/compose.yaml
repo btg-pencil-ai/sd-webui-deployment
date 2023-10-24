@@ -15,6 +15,9 @@ services:
     image: sd-webui-deployment:latest
     command: /bin/bash -c "python3 worker.py"
     environment:
-      WORKER_NAME: "sd-webui-worker-sd15"
       RABBIT_URL: "amqp://guest:guest@localhost:5672?heartbeat=3600"
       EXCHANGE_NAME: "pencil_exchange"
+      WORKER_NAME: "sd-webui-worker-sd15"
+      SD_WEBUI_WORKER_QUEUE: "sd_webui_worker_queue"
+      SD_WEBUI_WORKER_ROUTING_KEY: "*.submit.sd15"
+      SD_WEBUI_CALLBACK_ROUTING_KEY: "*.callback.sd15"
