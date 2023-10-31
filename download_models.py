@@ -11,7 +11,8 @@ MAIN_MODELS_PATH=os.environ.get("MAIN_MODELS_PATH",
                                 "/stable-diffusion-webui/models")
 CONTROLNET_EXTENSION_MODELS_PATH=os.environ.get("CONTROLNET_EXTENSION_MODELS_PATH", 
                                                 "/stable-diffusion-webui/extensions/sd-webui-controlnet/models")
-
+ANNOTATOR_PATH=os.environ.get("ANNOTATOR_PATH", 
+                                                "/stable-diffusion-webui/extensions/sd-webui-controlnet/annotator/downloads/clip_vision")
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class HuggingFaceModelDownloader():
             {'repo_id': 'lllyasviel/ControlNet-v1-1', 'filename': 'control_v11f1p_sd15_depth.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'lllyasviel/ControlNet-v1-1', 'filename': 'control_v11e_sd15_shuffle.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'lllyasviel/sd_control_collection', 'filename': 'ip-adapter_xl.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
+            {'repo_id': 'lllyasviel/Annotators', 'filename': 'clip_g.pth', 'filepath': ANNOTATOR_PATH},
         ]
         
         for model in models_to_download:
