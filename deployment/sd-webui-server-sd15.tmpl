@@ -35,6 +35,9 @@ spec:
             mountPath: /stable-diffusion-webui/extensions/sd-webui-controlnet/models
             subPath: sd-webui-controlnet-models
           - name: sd-webui-pv
+            mountPath: /stable-diffusion-webui/extensions/sd-webui-controlnet/annotator/downloads/clip_vision
+            subPath: sd-webui-annotator-models
+          - name: sd-webui-pv
             mountPath: /stable-diffusion-webui/repositories/CodeFormer/weights
             subPath: sd-webui-codeformer-models
         resources:

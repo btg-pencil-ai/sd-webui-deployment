@@ -13,6 +13,9 @@ CONTROLNET_EXTENSION_MODELS_PATH="/stable-diffusion-webui/extensions/sd-webui-co
 # Configure the below to point to local mountpoint
 MOUNT_CONTROLNET_EXTENSION_MODELS_PATH="/mnt/data/docker/sd-webui-controlnet-models"
 
+ANNOTATOR_MODELS_PATH="/stable-diffusion-webui/extensions/sd-webui-controlnet/annotator/downloads/clip_vision"
+MOUNT_ANNOTATOR_MODELS_PATH="mnt/data/docker/sd-webui-annotator-models"
+
 CODEFORMER_MODEL_PATH="/stable-diffusion-webui/repositories/CodeFormer/weights/"
 MOUNT_CODEFORMER_MODEL_PATH="/mnt/data/docker/sd-webui-codeformer-models"
 
@@ -25,6 +28,7 @@ SD_VERSION=${SD_VERSION:="SDXL"}
 mkdir -p ${MOUNT_MAIN_MODELS_PATH}
 mkdir -p ${MOUNT_CONTROLNET_EXTENSION_MODELS_PATH}
 mkdir -p ${MOUNT_CODEFORMER_MODEL_PATH}
+mkdir -p ${ANNOTATOR_MODELS_PATH}
 
 # Run with network host, gpu, and mount points
 docker run --rm -t -d \
@@ -34,5 +38,6 @@ docker run --rm -t -d \
     -v ${MOUNT_HF_HOME}:${HF_HOME} \
     -v ${MOUNT_MAIN_MODELS_PATH}:${MAIN_MODELS_PATH} \
     -v ${MOUNT_CONTROLNET_EXTENSION_MODELS_PATH}:${CONTROLNET_EXTENSION_MODELS_PATH} \
+    -v ${MOUNT_ANNOTATOR_MODELS_PATH}:${ANNOTATOR_MODELS_PATH} \
     -v ${MOUNT_CODEFORMER_MODEL_PATH}:${CODEFORMER_MODEL_PATH} \
     ${DOCKER_IMAGE_NAME}
