@@ -19,13 +19,13 @@ worker_name = None
 worker_info = {
     'sd_webui_worker_sd15': {
         'message_processor': sd_webui_post_callback_processor,
-        'queue': os.environ.get('SD_WEBUI_WORKER_QUEUE', None),
-        'routing_key': os.environ.get('SD_WEBUI_WORKER_ROUTING_KEY', None)
+        'queue': os.environ.get('SD_WEBUI_WORKER_QUEUE', "sd_webui_sd15_queue"),
+        'routing_key': os.environ.get('SD15_WEBUI_WORKER_ROUTING_KEY', "*.sd15_webui.worker")
     },
     'sd_webui_worker_sdxl': {
         'message_processor': sd_webui_post_callback_processor,
-        'queue': os.environ.get('SD_WEBUI_WORKER_QUEUE', None),
-        'routing_key': os.environ.get('SD_WEBUI_WORKER_ROUTING_KEY', None)
+        'queue': os.environ.get('SD_WEBUI_WORKER_QUEUE', "sd_webui_sdxl_queue"),
+        'routing_key': os.environ.get('SDXL_WEBUI_WORKER_ROUTING_KEY', "*.sdxl_webui.worker")
     }
 }
 
