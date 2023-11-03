@@ -13,7 +13,7 @@ services:
 
   sd-webui-worker-sd15:
     image: sd-webui-deployment:latest
-    command: /bin/bash -c "python3 worker.py"
+    command: /bin/bash -c "conda run --no-capture-output -n worker python3 worker.py --worker sd_webui_worker_sd15"
     environment:
       RABBIT_URL: "amqp://guest:guest@localhost:5672?heartbeat=3600"
       EXCHANGE_NAME: "pencil_exchange"
