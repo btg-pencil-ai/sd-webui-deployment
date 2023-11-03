@@ -25,7 +25,7 @@ RUN chmod +x ./launch.sh
 ENV CONDA_DIR /opt/conda
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
 	/bin/bash ~/miniconda.sh -b -p /opt/conda
-ENV PATH=${CONDA_DIR}/bin:${PATH}
+ENV PATH=${PATH}:${CONDA_DIR}/bin
 
 # Create worker environment 'worker'
 RUN conda env create -f worker_environment.yml
