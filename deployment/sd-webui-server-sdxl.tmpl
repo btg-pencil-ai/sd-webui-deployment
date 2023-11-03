@@ -23,7 +23,7 @@ spec:
         image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
         imagePullPolicy: Always
         tty: true
-        command: ["/bin/bash", "-c", "launch.sh"]
+        command: ["/bin/bash", "-c", "ls"]
         volumeMounts:
           - name: sd-webui-pv
             mountPath: /hf-home
