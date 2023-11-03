@@ -11,6 +11,13 @@ services:
     environment:
       SD_VERSION: "SD15"
     network_mode: "host"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   sd-webui-worker-sd15:
     image: sd-webui-deployment:latest
