@@ -25,7 +25,7 @@ spec:
         tty: true
         command: ["/bin/bash", "-c"]
         args:
-          - launch.sh
+          - ./launch.sh
         volumeMounts:
           - name: sd-webui-pv
             mountPath: /hf-home
