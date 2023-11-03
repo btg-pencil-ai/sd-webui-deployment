@@ -1,4 +1,5 @@
 #!/bin/bash
+START_PROXY_WORKER=${START_PROXY_WORKER:=false}
 
 # build docker image first in ./sd-webui-deployment dir (docker build -t sd-webui-deployment:latest .)
 DOCKER_IMAGE_NAME="sd-webui-deployment:latest"

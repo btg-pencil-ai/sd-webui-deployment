@@ -16,4 +16,8 @@ ENV HF_HOME "/hf-home"
 COPY . /sd-webui-deployment
 WORKDIR /sd-webui-deployment
 
+RUN pip install -r requirements.txt
+
+ENV START_PROXY_WORKER false
+
 CMD ["/bin/bash", "launch.sh"]
