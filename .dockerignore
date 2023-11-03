@@ -18,5 +18,5 @@ coverage
 reports
 tmp
 cache_data
-
+Dockerfile
 .env

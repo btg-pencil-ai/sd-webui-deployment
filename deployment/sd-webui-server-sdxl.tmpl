@@ -23,7 +23,9 @@ spec:
         image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
         imagePullPolicy: Always
         tty: true
-        command: ["/bin/bash", "-c", "ls"]
+        command: ["/bin/bash", "-c"]
+        args:
+          - launch.sh
         volumeMounts:
           - name: sd-webui-pv
             mountPath: /hf-home
@@ -51,7 +53,9 @@ spec:
         image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
         imagePullPolicy: Always
         tty: true
-        command: ["/bin/bash", "-c", "python3", "worker.py", "--worker", "sd_webui_worker_sdxl"]
+        command: ["/bin/bash", "-c"]
+        args:
+          - python3 worker.py --worker sd_webui_worker_sdxl
         resources:
           requests:
             cpu: 2000m
