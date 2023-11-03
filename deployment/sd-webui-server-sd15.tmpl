@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sd-webui-server-sd15
+  name: sd-webui-sd15
 spec:
   selector:
     matchLabels:
-      component: sd-webui-server-sd15
+      component: sd-webui-sd15
   replicas: ${POD_REPLICAS_SD_WEBUI_SERVER}
   template:
     metadata:
       labels:
-        component: sd-webui-server-sd15
+        component: sd-webui-sd15
     spec:
       nodeSelector:
         intent: gpu-machines
