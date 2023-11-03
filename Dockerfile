@@ -16,4 +16,6 @@ ENV HF_HOME "/hf-home"
 COPY . /sd-webui-deployment
 WORKDIR /sd-webui-deployment
 
-CMD ["/bin/bash", "launch.sh"]
+RUN pip install -r requirements.txt
+
+#CMD ["/bin/bash", "launch.sh"]

@@ -1,5 +1,4 @@
 #!/bin/bash
-
 MAIN_MODELS_PATH=${MAIN_MODELS_PATH:="/stable-diffusion-webui/models"}
 
 # If we mount a fresh disk we might be missing these subdirs during the 1st run, so recreate them here
@@ -49,6 +48,3 @@ LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4" python3 launch.py  ${LAU
     --listen \
     --timeout-keep-alive 300 \
     --port 7860
-
-# TODO - supposed to expose v1/server-kill, server-restart, server-stop
-# --api-server-stop

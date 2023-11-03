@@ -23,7 +23,7 @@ spec:
         image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
         imagePullPolicy: Always
         tty: true
-        command: 
+        command: ["/bin/bash", "-c", "launch.sh"]
         volumeMounts:
           - name: sd-webui-pv
             mountPath: /hf-home
@@ -42,25 +42,32 @@ spec:
             subPath: sd-webui-codeformer-models
         resources:
           requests:
-            cpu: 7500m
-            memory: 28Gi
+            cpu: 5500m
+            memory: 26Gi
           limits:
-            cpu: 7500m
-            memory: 28Gi
+            cpu: 5500m
+            memory: 26Gi
         env:
           - name: SD_VERSION
             value: "SDXL"
-            
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: sd-webui-server-sdxl
-spec:
-  type: ClusterIP
-  selector:
-    component: sd-webui-server-sdxl
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 7860
+      - name: sd-webui-worker-sdxl
+        image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
+        imagePullPolicy: Always
+        tty: true
+        command: ["/bin/bash", "-c", "python3", "worker.py", "--worker", "sd_webui_worker_sdxl"]
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        env:
+          - name: SD_VERSION
+            value: "SDXL"
+          - name: SD_WEBUI_API_ENDPOINT
+            value: "http://localhost:7860"
+          - name: RABBIT_URL
+            value: "${RABBIT_URL}"
+          - name: EXCHANGE_NAME
+            value: "${EXCHANGE_NAME}"
