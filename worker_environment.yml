@@ -1,0 +1,9 @@
+name: worker
+
+dependencies:
+  - python=3.8.17
+  - pip:
+    - pyjwt==1.7.1
+    - requests==2.31.0
+    - pika==0.13.1
+    - pillow==10.1.0

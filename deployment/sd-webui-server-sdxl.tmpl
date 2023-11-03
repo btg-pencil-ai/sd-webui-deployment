@@ -55,7 +55,7 @@ spec:
         tty: true
         command: ["/bin/bash", "-c"]
         args:
-          - python3 worker.py --worker sd_webui_worker_sdxl
+          - conda run --no-capture-output -n worker python3 worker.py --worker sd_webui_worker_sdxl
         resources:
           requests:
             cpu: 2000m

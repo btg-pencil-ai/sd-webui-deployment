@@ -2,7 +2,7 @@ FROM  louistrypencil/stable-diffusion-webui:nvidia-cuda-12.2.0-runtime-ubuntu22.
 
 # For TCMalloc
 RUN apt update \
-    && apt install google-perftools -y \
+    && apt install google-perftools wget -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install xformers==0.0.22 accelerate==0.21.0
@@ -19,4 +19,15 @@ WORKDIR /sd-webui-deployment
 RUN pip install -r requirements.txt
 
 RUN chmod +x ./launch.sh
+
+# For worker - we are limited to python <3.10 due to old pika version limited by amqp.py
+# implementation - use conda to easily create python3.8 env (3.8 is used in idea-builder)
+ENV CONDA_DIR /opt/conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+	/bin/bash ~/miniconda.sh -b -p /opt/conda
+ENV PATH=${CONDA_DIR}/bin:${PATH}
+
+# Create worker environment 'worker'
+RUN conda env create -f worker_environment.yml
+
 #CMD ["/bin/bash", "launch.sh"]
