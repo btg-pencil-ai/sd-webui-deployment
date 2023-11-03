@@ -18,6 +18,4 @@ WORKDIR /sd-webui-deployment
 
 RUN pip install -r requirements.txt
 
-ENV START_PROXY_WORKER false
-
-CMD ["/bin/bash", "launch.sh"]
+#CMD ["/bin/bash", "launch.sh"]
