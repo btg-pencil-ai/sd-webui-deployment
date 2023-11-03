@@ -18,4 +18,5 @@ WORKDIR /sd-webui-deployment
 
 RUN pip install -r requirements.txt
 
+RUN chmod +x ./launch.sh
 #CMD ["/bin/bash", "launch.sh"]
