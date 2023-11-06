@@ -20,3 +20,4 @@ tmp
 cache_data
 Dockerfile
 .env
+deployment/
