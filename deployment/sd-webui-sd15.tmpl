@@ -55,8 +55,7 @@ spec:
         tty: true
         command: ["/bin/bash", "-c"]
         args:
-          - conda run --no-capture-output -n worker python3 --version;
-          - conda run --no-capture-output -n worker python3 worker.py --worker sd_webui_worker_sd15
+          - conda run --no-capture-output -n worker python3 --version && conda run --no-capture-output -n worker python3 worker.py --worker sd_webui_worker_sd15
         resources:
           requests:
             cpu: 2000m
