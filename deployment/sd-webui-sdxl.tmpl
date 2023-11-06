@@ -23,8 +23,8 @@ spec:
         image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
         imagePullPolicy: Always
         tty: true
-        command: ["/bin/bash"]
-        args: ["-c", "./launch.sh"]
+        command: ["/bin/bash", "-c"]
+          -  ./launch.sh
         volumeMounts:
           - name: sd-webui-pv
             mountPath: /hf-home
@@ -52,8 +52,8 @@ spec:
         image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
         imagePullPolicy: Always
         tty: true
-        command: ["/bin/bash"]
-        args: ["-c", "conda run --no-capture-output -n worker python3 worker.py --worker sd_webui_worker_sdxl"]
+        command: ["/bin/bash", "-c"]
+        args: ["conda run --no-capture-output -n worker python3 --version; conda run --no-capture-output -n worker python3 worker.py --worker sd_webui_worker_sdxl"]
         resources:
           requests:
             cpu: 2000m
