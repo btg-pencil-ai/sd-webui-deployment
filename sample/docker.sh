@@ -14,7 +14,7 @@ CONTROLNET_EXTENSION_MODELS_PATH="/stable-diffusion-webui/extensions/sd-webui-co
 MOUNT_CONTROLNET_EXTENSION_MODELS_PATH="/mnt/data/docker/sd-webui-controlnet-models"
 
 ANNOTATOR_MODELS_PATH="/stable-diffusion-webui/extensions/sd-webui-controlnet/annotator/downloads/clip_vision"
-MOUNT_ANNOTATOR_MODELS_PATH="mnt/data/docker/sd-webui-annotator-models"
+MOUNT_ANNOTATOR_MODELS_PATH="/mnt/data/docker/sd-webui-annotator-models"
 
 CODEFORMER_MODEL_PATH="/stable-diffusion-webui/repositories/CodeFormer/weights/"
 MOUNT_CODEFORMER_MODEL_PATH="/mnt/data/docker/sd-webui-codeformer-models"
