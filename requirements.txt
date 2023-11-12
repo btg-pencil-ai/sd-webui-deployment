@@ -1,0 +1,6 @@
+pyjwt==1.7.1
+pika==0.13.1
+xformers==0.0.22
+accelerate==0.21.0
+requests==2.31.0
+pillow==10.1.0
