@@ -37,6 +37,7 @@ fi
 echo "SD_VERSION set to ${SD_VERSION} with LAUNCH_FLAGS: ${LAUNCH_FLAGS}"
 
 LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4" python3 launch.py  ${LAUNCH_FLAGS} \
+    --controlnet-loglevel DEBUG \
     --xformers \
     --no-half-vae \
     --skip-prepare-environment \
