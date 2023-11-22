@@ -138,7 +138,7 @@ def main():
 
     try:
         # Let this raise - we should not accept messages if we fail basic checks
-        check_server_readiness()
+        check_server_readiness(init_sleep_seconds=5)
         logger.info(f"Server is ready - starting consumer & connecting to queue")
 
         consumer.run()
