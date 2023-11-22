@@ -8,6 +8,14 @@ JWT_TOKEN = os.environ.get('JWT_TOKEN')
 CALLBACK_RABBIT_URL = RABBIT_URL  # in case we want to change this in the future
 EXCHANGE_NAME = os.environ.get('EXCHANGE_NAME')
 
+try:
+    ENABLE_REQUEUE = os.environ.get('ENABLE_REQUEUE', 'false').lower() == 'true'
+
+except Exception as e:
+    ENABLE_REQUEUE = False
+
+DELAY_EXCHANGE_NAME = os.environ.get('DELAY_EXCHANGE_NAME')
+
 SD_WEBUI_API_ENDPOINT = os.environ.get("SD_WEBUI_API_ENDPOINT", "http://localhost:7860")
 BATCH_UPSCALE_ENDPOINT = "sdapi/v1/extra-batch-images/"
 SET_SD_WEBUI_OPTIONS_ENDPOINT = "sdapi/v1/options/"
