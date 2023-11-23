@@ -20,8 +20,10 @@ SD_WEBUI_API_ENDPOINT = os.environ.get("SD_WEBUI_API_ENDPOINT", "http://localhos
 BATCH_UPSCALE_ENDPOINT = "sdapi/v1/extra-batch-images/"
 SET_SD_WEBUI_OPTIONS_ENDPOINT = "sdapi/v1/options/"
 
-SERVER_CHECK_RETRIES=6
-SERVER_CHECK_BACKOFF=3  # factor * 2^num_prev_retries e.g. if 3, will be 3 * (2, 4, 8, ...)
+# Be very aggressive on this so we don't waste time
+SERVER_CHECK_INITIAL_DELAY=1
+SERVER_CHECK_RETRIES=10
+SERVER_CHECK_BACKOFF=1  # factor * 2^num_prev_retries e.g. if 3, will be 3 * (2, 4, 8, ...)
 SERVER_CHECK_TIMEOUT=30
 
 SERVER_POST_RETRIES=3
