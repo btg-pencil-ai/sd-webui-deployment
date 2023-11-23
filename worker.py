@@ -10,6 +10,8 @@ from src.common.amqp import QueueConsumer, configure_queue
 from src.common.logger import get_logger
 from src.common.utils import sanitize_params_for_print
 from src.sd_webui_proxy.sdwebui_post_callback import sd_webui_post_callback_processor
+from src.sd_webui_proxy.util import check_server_readiness
+
 
 logger = get_logger(__name__)
 
@@ -135,6 +137,10 @@ def main():
         config.RABBIT_URL, worker_info[worker_name]['queue'], callback)
 
     try:
+        # Let this raise - we should not accept messages if we fail basic checks
+        check_server_readiness(init_sleep_seconds=5)
+        logger.info(f"Server is ready - starting consumer & connecting to queue")
+
         consumer.run()
 
     except KeyboardInterrupt:

@@ -5,17 +5,22 @@ import requests
 
 import src.config as config
 
+from requests.adapters import HTTPAdapter
 from urllib.parse import urljoin
+from urllib3.util.retry import Retry
 
 from src.common import amqp
 from src.common.logger import get_logger
 from src.sd_webui_proxy.type import UpscaleBatchImagesListPayload, BatchImagesListType
-from src.sd_webui_proxy.util import base64_to_image, image_to_base64
+from src.sd_webui_proxy.util import base64_to_image, image_to_base64, get_session
+
 
 logger = get_logger()
 
 
 def sd_webui_post_callback_processor(params):
+    session = get_session(config.SERVER_POST_RETRIES, config.SERVER_POST_BACKOFF)
+
     try:
         callback_message = params.get('callback_message', {})
 
@@ -44,15 +49,20 @@ def sd_webui_post_callback_processor(params):
         height = callback_payload.get("gen_image_height")
 
         if sd_webui_options_payload is not None:
-            set_sd_webui_options_full_endpoint = urljoin(config.SD_WEBUI_API_ENDPOINT, config.SET_SD_WEBUI_OPTIONS_ENDPOINT)
+            set_sd_webui_options_full_endpoint = urljoin(config.SD_WEBUI_API_ENDPOINT, 
+                                                         config.SET_SD_WEBUI_OPTIONS_ENDPOINT)
 
-            response = requests.post(set_sd_webui_options_full_endpoint, json=sd_webui_options_payload, timeout=300)
+            #response = requests.post(set_sd_webui_options_full_endpoint, json=sd_webui_options_payload, timeout=300)
+            response = session.post(url=set_sd_webui_options_full_endpoint, 
+                                    json=sd_webui_options_payload,
+                                    timeout=config.SERVER_POST_TIMEOUT)
             response.raise_for_status()
 
             logger.info(f'Completed switching models')
 
         logger.info(f"Posting to {full_endpoint}")
-        response = requests.post(full_endpoint, json=payload, timeout=300)
+        #response = requests.post(full_endpoint, json=payload, timeout=300)
+        response = session.post(url=full_endpoint, json=payload, timeout=config.SERVER_POST_TIMEOUT)
         response.raise_for_status()
 
         response_json = response.json()
@@ -64,10 +74,15 @@ def sd_webui_post_callback_processor(params):
         if(upscale_payload is not None):
             upscale_full_endpoint = urljoin(config.SD_WEBUI_API_ENDPOINT, config.BATCH_UPSCALE_ENDPOINT)
             
-            upscaled_images_list = asdict(UpscaleBatchImagesListPayload(imageList=[asdict((BatchImagesListType(name=f"image_{index}",data=image))) for index,image in enumerate(result_images)]))
+            upscaled_images_list = asdict(UpscaleBatchImagesListPayload(
+                imageList=[asdict((BatchImagesListType(name=f"image_{index}",data=image))) 
+                           for index,image in enumerate(result_images)]))
             upscale_payload.update(upscaled_images_list)
             
-            upscale_response = requests.post(upscale_full_endpoint, json=upscale_payload, timeout=300)
+            #upscale_response = requests.post(upscale_full_endpoint, json=upscale_payload, timeout=300)
+            upscale_response = session.post(url=upscale_full_endpoint, 
+                                            json=upscale_payload, 
+                                            timeout=config.SERVER_POST_TIMEOUT)
             upscale_response.raise_for_status()
 
             upscale_response_json = upscale_response.json()
@@ -88,5 +103,9 @@ def sd_webui_post_callback_processor(params):
         logger.error(e, exc_info=True)
 
     finally:
-        amqp.publish(config.EXCHANGE_NAME, callback_routing_key, callback_payload, None, callback_priority)
+        amqp.publish(config.EXCHANGE_NAME, 
+                     callback_routing_key, 
+                     callback_payload, 
+                     None, 
+                     callback_priority)
         logger.info(f'Published to callback queue {callback_routing_key}')
