@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sd-webui-sd15-inpaint
+spec:
+  selector:
+    matchLabels:
+      component: sd-webui-sd15-inpaint
+  replicas: ${POD_REPLICAS_SD_INPAINT_WEBUI_SERVER}
+  template:
+    metadata:
+      labels:
+        component: sd-webui-sd15-inpaint
+    spec:
+      nodeSelector:
+        intent: gpu-machines
+      volumes:
+      - name: sd-webui-pv
+        persistentVolumeClaim:
+          claimName: ${PERSISTENT_VOLUME_CLAIM_NAME}
+      containers:
+      - name: sd-webui-server-sd15-inpaint
+        image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
+        imagePullPolicy: Always
+        tty: true
+        command: ["/bin/bash", "-c"]
+        args:
+          - ./launch.sh
+        volumeMounts:
+          - name: sd-webui-pv
+            mountPath: /hf-home
+            subPath: sd-webui-hf-home
+          - name: sd-webui-pv
+            mountPath: /stable-diffusion-webui/models/
+            subPath: sd-webui-models
+          - name: sd-webui-pv
+            mountPath: /stable-diffusion-webui/extensions/sd-webui-controlnet/models
+            subPath: sd-webui-controlnet-models
+          - name: sd-webui-pv
+            mountPath: /stable-diffusion-webui/extensions/sd-webui-controlnet/annotator/downloads/clip_vision
+            subPath: sd-webui-annotator-models
+          - name: sd-webui-pv
+            mountPath: /stable-diffusion-webui/repositories/CodeFormer/weights
+            subPath: sd-webui-codeformer-models
+        resources:
+          requests:
+            cpu: 5500m
+            memory: 28Gi
+          limits:
+            cpu: 5500m
+            memory: 28Gi
+            nvidia.com/gpu: 1
+        env:
+          - name: SD_VERSION
+            value: "SD15_INPAINT"
+      - name: sd-webui-worker-sd15-inpaint
+        image: "$DOCKER_REGISTRY/$ECR_NAMESPACE/$SERVICE_NAME:$TAG"
+        imagePullPolicy: Always
+        tty: true
+        command: ["/bin/bash", "-c"]
+        args:
+          - conda run --no-capture-output -n worker python3 --version && conda run --no-capture-output -n worker python3 worker.py --worker sd_webui_worker_sd15_inpaint
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        env:
+          - name: SD_VERSION
+            value: "SD15_INPAINT"
+          - name: SD_WEBUI_API_ENDPOINT
+            value: "http://localhost:7860"
+          - name: RABBIT_URL
+            value: "${RABBIT_URL}"
+          - name: EXCHANGE_NAME
+            value: "${EXCHANGE_NAME}"

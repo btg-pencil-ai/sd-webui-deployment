@@ -28,6 +28,11 @@ worker_info = {
         'message_processor': sd_webui_post_callback_processor,
         'queue': os.environ.get('SD_WEBUI_WORKER_QUEUE', "sd_webui_sdxl_queue"),
         'routing_key': os.environ.get('SDXL_WEBUI_WORKER_ROUTING_KEY', "*.sdxl_webui.worker")
+    },
+    'sd_webui_worker_sd15_inpaint': {
+        'message_processor': sd_webui_post_callback_processor,
+        'queue': os.environ.get('SD_INPAINT_WEBUI_WORKER_QUEUE', "sd_webui_sd15_inpaint_queue"),
+        'routing_key': os.environ.get('SD15_INPAINT_WEBUI_WORKER_ROUTING_KEY', "*.sd15_inpaint_webui.worker")
     }
 }
 
