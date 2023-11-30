@@ -23,6 +23,11 @@ if [ ${SD_VERSION} == "SD15" ]; then
     LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/v1-5-pruned-emaonly.safetensors \
         --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt"
 
+elif [ ${SD_VERSION} == "SD15_INPAINT" ]; then
+    # Append flags for other cases
+    LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/sd-v1-5-inpainting.ckpt \
+        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt"
+
 elif [ ${SD_VERSION} == "SDXL" ]; then
     # Append flags for other cases
     LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/sd_xl_base_1.0.safetensors \
