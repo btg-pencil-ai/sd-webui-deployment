@@ -67,3 +67,16 @@ def check_server_readiness(init_sleep_seconds: int = 0):
     ready = res.json().get('state', {}).get('job_count', None) == 0
 
     return ready
+
+def url_to_base64_image(url):
+    try:
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            # Encode the image data as a Base64 string
+            base64_image = base64.b64encode(response.content).decode("utf-8")
+            return base64_image
+        else:
+            print(f"Failed to fetch the image. Status code: {response.status_code}")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
