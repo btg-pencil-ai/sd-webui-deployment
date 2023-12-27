@@ -26,7 +26,7 @@ services:
       RABBIT_URL: "amqp://guest:guest@localhost:5672?heartbeat=3600"
       EXCHANGE_NAME: "pencil_exchange"
       WORKER_NAME: "sd_webui_worker_sd15_inpaint"
-      SD_WEBUI_WORKER_QUEUE: "sd_webui_worker_queue"
+      SD_WEBUI_WORKER_QUEUE: "sd_webui_sd15_inpaint_queue"
       SD_WEBUI_WORKER_ROUTING_KEY: "*.submit.sd15_inpaint"
       SD_WEBUI_CALLBACK_ROUTING_KEY: "*.callback.sd15_inpaint"
     network_mode: "host"
