@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 
 import src.config as config
 from src.common.logger import get_logger
-from src.sd_webui_proxy.type import Img2ImgPayload, SDLamaCleanerPayload, SDWebUIPayload, UpscaleBatchImagesListPayload, BatchImagesListType
+from src.sd_webui_proxy.type import SDWebUIPayload, UpscaleBatchImagesListPayload, BatchImagesListType
 from src.sd_webui_proxy.util import base64_to_image, image_to_base64, get_session, url_to_base64_image
 
 logger = get_logger()
@@ -13,13 +13,10 @@ session = get_session(config.SERVER_POST_RETRIES, config.SERVER_POST_BACKOFF)
 
 def is_controlnet_args_present(payload:SDWebUIPayload):
     return (
-        hasattr(payload, 'alwayson_scripts') 
-        and payload.alwayson_scripts is not None
-        and hasattr(payload.alwayson_scripts, 'controlnet') 
-        and payload.alwayson_scripts.controlnet is not None
-        and hasattr(payload.alwayson_scripts.controlnet, 'args') 
-        and payload.alwayson_scripts.controlnet.args is not None
-        and len(payload.alwayson_scripts.controlnet.args) > 0
+        payload.get('alwayson_scripts') is not None
+        and payload.get('alwayson_scripts').get('controlnet') is not None
+        and payload.get('alwayson_scripts').get('controlnet').get('args') is not None
+        and len(payload.get('alwayson_scripts').get('controlnet').get('args',[])) > 0
     )
 
 def replace_image_s3_url_to_base64(payload:SDWebUIPayload):
@@ -28,22 +25,22 @@ def replace_image_s3_url_to_base64(payload:SDWebUIPayload):
     if input_image_list is not None and len(input_image_list)>0:
         input_image_url = input_image_list[0]
         input_image_base64 = url_to_base64_image(input_image_url)
-        payload.init_images = [input_image_base64]
+        payload['init_images'] = [input_image_base64]
     
     input_image_url = payload.get("input_image", None)
     if(input_image_url is not None and len(input_image_url)>0):
         input_image_base64 = url_to_base64_image(input_image_url)
-        payload.input_image = input_image_base64
+        payload['input_image'] = input_image_base64
 
     input_image_mask_url = payload.get("mask", None)
     if(input_image_mask_url is not None and len(input_image_mask_url)>0):
         input_image_mask_base64 = url_to_base64_image(input_image_mask_url)
-        payload.mask = input_image_mask_base64
+        payload['mask'] = input_image_mask_base64
     
     if is_controlnet_args_present(payload) is True:
-        for cfg in payload.alwayson_scripts.controlnet.args:
+        for cfg in payload['alwayson_scripts']['controlnet']['args']:
             cfg_input_image = cfg.get("input_image")
-            if  cfg_input_image is not None or len(cfg_input_image)>0:
+            if  cfg_input_image is not None and len(cfg_input_image)>0:
                 cfg["input_image"] = url_to_base64_image(cfg_input_image)
 
 def post_request(url, payload, timeout=config.SERVER_POST_TIMEOUT):
@@ -76,7 +73,7 @@ def get_generated_images(requests):
                 payload["init_images"] = [result_image_selected]
             
             if is_controlnet_args_present(payload) is True:
-                for cfg in payload.alwayson_scripts.controlnet.args:
+                for cfg in payload['alwayson_scripts']['controlnet']['args']:
                     cfg["input_image"] = result_image_selected
                 
         response = post_request(url=full_endpoint, payload=payload)
