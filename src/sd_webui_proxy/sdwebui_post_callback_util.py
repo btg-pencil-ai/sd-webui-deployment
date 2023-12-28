@@ -69,7 +69,7 @@ def get_generated_images(requests):
         if len(result_images) > 0:
             result_image_selected = result_images[0]
 
-            if hasattr(payload, "init_images") is True:
+            if "init_images" in payload:
                 payload["init_images"] = [result_image_selected]
             
             if is_controlnet_args_present(payload) is True:
