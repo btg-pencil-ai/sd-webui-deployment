@@ -1,9 +1,13 @@
 import io
+import os
 import base64
 import logging
 import requests
 import time
 import urllib3
+import uuid
+import tempfile
+from src.aws.aws import upload_to_s3
 
 import src.config as config
 
@@ -80,3 +84,21 @@ def url_to_base64_image(url):
             print(f"Failed to fetch the image. Status code: {response.status_code}")
     except Exception as e:
         print(f"An error occurred: {str(e)}")
+
+def get_generated_image_s3_key(
+    base_filename: str, client_id: int, batch_uuid: str, image_ext: str
+) -> str:
+    return f"{os.path.join(base_filename,str(client_id),batch_uuid, str(uuid.uuid4()))}.{image_ext}"
+
+def upload_base64_to_s3(base64_data, s3_key):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        input_image_data = base64.b64decode(base64_data)
+        file_path = os.path.join(temp_dir, f"{uuid.uuid4()}.jpg")
+        with open(file_path, "wb") as file:
+            file.write(input_image_data)
+        upload_to_s3(
+            filename=file_path,
+            bucket=config.AWS_S3_BUCKET,
+            key=s3_key,
+            public=True,
+        )
