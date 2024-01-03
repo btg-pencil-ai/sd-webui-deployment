@@ -4,3 +4,4 @@ xformers==0.0.22
 accelerate==0.21.0
 requests==2.31.0
 pillow==10.1.0
+boto3==1.34.9
