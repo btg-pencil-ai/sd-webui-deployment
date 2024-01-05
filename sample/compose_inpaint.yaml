@@ -29,6 +29,6 @@ services:
       SD_WEBUI_WORKER_QUEUE: "sd_webui_sd15_inpaint_queue"
       SD_WEBUI_WORKER_ROUTING_KEY: "*.submit.sd15_inpaint"
       SD_WEBUI_CALLBACK_ROUTING_KEY: "*.callback.sd15_inpaint"
-      AWS_ACCESS_KEY_ID: "AKIAJXW4XJVDAPB4FZFQ"
-      AWS_SECRET_ACCESS_KEY: "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"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     network_mode: "host"
