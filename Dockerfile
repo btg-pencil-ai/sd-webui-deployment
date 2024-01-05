@@ -32,4 +32,7 @@ RUN command -v conda || (wget --quiet https://repo.anaconda.com/miniconda/Minico
 
 # Create worker environment 'worker'
 RUN conda env list | grep -q 'worker' || (conda env create -f worker_environment.yml)
+
+RUN conda init && \
+    echo "conda activate worker" >> ~/.bashrc
 #CMD ["/bin/bash", "launch.sh"]
