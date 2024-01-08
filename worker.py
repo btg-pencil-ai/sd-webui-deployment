@@ -10,6 +10,8 @@ from src.common.amqp import QueueConsumer, configure_queue
 from src.common.logger import get_logger
 from src.common.utils import sanitize_params_for_print
 from src.sd_webui_proxy.sdwebui_post_callback import sd_webui_post_callback_processor
+from src.sd_webui_proxy.util import check_server_readiness
+
 
 logger = get_logger(__name__)
 
@@ -26,6 +28,11 @@ worker_info = {
         'message_processor': sd_webui_post_callback_processor,
         'queue': os.environ.get('SD_WEBUI_WORKER_QUEUE', "sd_webui_sdxl_queue"),
         'routing_key': os.environ.get('SDXL_WEBUI_WORKER_ROUTING_KEY', "*.sdxl_webui.worker")
+    },
+    'sd_webui_worker_sd15_inpaint': {
+        'message_processor': sd_webui_post_callback_processor,
+        'queue': os.environ.get('SD_INPAINT_WEBUI_WORKER_QUEUE', "sd_webui_sd15_inpaint_queue"),
+        'routing_key': os.environ.get('SD15_INPAINT_WEBUI_WORKER_ROUTING_KEY', "*.sd15_inpaint_webui.worker")
     }
 }
 
@@ -135,6 +142,10 @@ def main():
         config.RABBIT_URL, worker_info[worker_name]['queue'], callback)
 
     try:
+        # Let this raise - we should not accept messages if we fail basic checks
+        check_server_readiness(init_sleep_seconds=config.SERVER_CHECK_INITIAL_DELAY)
+        logger.info(f"Server is ready - starting consumer & connecting to queue")
+
         consumer.run()
 
     except KeyboardInterrupt:

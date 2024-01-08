@@ -40,6 +40,7 @@ class HuggingFaceModelDownloader():
             {'repo_id': 'lllyasviel/ControlNet-v1-1', 'filename': 'control_v11e_sd15_shuffle.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'lllyasviel/sd_control_collection', 'filename': 'ip-adapter_xl.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'lllyasviel/Annotators', 'filename': 'clip_g.pth', 'filepath': ANNOTATOR_MODELS_PATH},
+            {'repo_id': 'runwayml/stable-diffusion-inpainting', 'filename': 'sd-v1-5-inpainting.ckpt', 'filepath': STABLE_DIFFUSION_MODELS_PATH},
         ]
         
         for model in models_to_download:
