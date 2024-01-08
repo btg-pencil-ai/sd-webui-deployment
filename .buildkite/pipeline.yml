@@ -7,9 +7,10 @@ common_params:
   deploy_gke: &deploy_gke |-
     source ~/.bashrc
     ~/kubectl config use-context $$GKE_CLUSTER_NAME
-    DOCKER_REGISTRY="$$GCP_REGION-docker.pkg.dev/$$GCP_PROJECT_ID" NAMESPACE="$$GAR_NAMESPACE" TAG="$$BUILD_TAG-$$BUILDKITE_BUILD_NUMBER" envsubst < $$DEPLOYMENT_FILE.tmpl > $$DEPLOYMENT_FILE.yaml
-    cat $$DEPLOYMENT_FILE.yaml
-    # ~/kubectl apply -f $$DEPLOYMENT_FILE.yaml --namespace=$$K8S_NAMESPACE --grace-period 900 --wait
+    RABBIT_URL="$$GCP_RABBIT_URL" DOCKER_REGISTRY="$$GCP_REGION-docker.pkg.dev/$$GCP_PROJECT_ID" NAMESPACE="$$GAR_NAMESPACE" TAG="$$BUILD_TAG-$$BUILDKITE_BUILD_NUMBER" envsubst < $$DEPLOYMENT_FILE.tmpl > $$DEPLOYMENT_FILE.yaml
+    ~/kubectl apply -f $$DEPLOYMENT_FILE.yaml --namespace=$$K8S_NAMESPACE --grace-period 900 --wait
+-f $$DEPLOYMENT_FILE.yaml --namespace=$$K8S_NAMESPACE --grace-period 900 --wait
+
   gke_node_selector: &gke_node_selector |-
     ~/kubectl patch deployments $$DEPLOYMENT_NAME --type JSON -p '[{"op":"add","path":"/spec/template/spec/nodeSelector","value": {}},{"op":"add","path":"/spec/template/spec/nodeSelector/pool","value":"gpu-machines"}]'
 env:
