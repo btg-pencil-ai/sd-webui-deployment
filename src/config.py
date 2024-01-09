@@ -6,7 +6,7 @@ RABBIT_URL = os.environ.get('RABBIT_URL', 'amqp://guest:guest@localhost:5672?hea
 JWT_SECRET = os.environ.get('JWT_SECRET')
 JWT_TOKEN = os.environ.get('JWT_TOKEN')
 CALLBACK_RABBIT_URL = RABBIT_URL  # in case we want to change this in the future
-EXCHANGE_NAME = os.environ.get('EXCHANGE_NAME')
+EXCHANGE_NAME = os.environ.get('EXCHANGE_NAME',"pencil-exchange")
 
 try:
     ENABLE_REQUEUE = os.environ.get('ENABLE_REQUEUE', 'false').lower() == 'true'
@@ -29,4 +29,8 @@ SERVER_CHECK_TIMEOUT=30
 SERVER_POST_RETRIES=3
 SERVER_POST_BACKOFF=1
 SERVER_POST_TIMEOUT=300
+
+###############AWS###############
+AWS_S3_BUCKET = os.environ.get("AWS_S3_BUCKET","pencil-production-bucket")
+R2_ENABLED = os.environ.get("R2_ENABLED", "true") == "true"
 

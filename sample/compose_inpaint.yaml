@@ -1,5 +1,5 @@
 services:
-  sd-webui-server-sd15:
+  sd-webui-server-sd15-inpaint:
     image: sd-webui-deployment:latest
     command: /bin/bash -c "./launch.sh"
     tty: true
@@ -9,7 +9,7 @@ services:
       - /mnt/data/docker/sd-webui-controlnet-models:/stable-diffusion-webui/extensions/sd-webui-controlnet/models
       - /mnt/data/docker/sd-webui-codeformer-models:/stable-diffusion-webui/repositories/CodeFormer/weights
     environment:
-      SD_VERSION: "SD15"
+      SD_VERSION: "SD15_INPAINT"
     network_mode: "host"
     deploy:
       resources:
@@ -19,14 +19,16 @@ services:
               count: 1
               capabilities: [gpu]
 
-  sd-webui-worker-sd15:
+  sd-webui-worker-sd15-inpaint:
     image: sd-webui-deployment:latest
-    command: /bin/bash -c "conda run --no-capture-output -n worker python3 worker.py --worker sd_webui_worker_sd15"
+    command: /bin/bash -c "conda run --no-capture-output -n worker python3 worker.py --worker sd_webui_worker_sd15_inpaint"
     environment:
       RABBIT_URL: "amqp://guest:guest@localhost:5672?heartbeat=3600"
       EXCHANGE_NAME: "pencil_exchange"
-      WORKER_NAME: "sd-webui-worker-sd15"
-      SD_WEBUI_WORKER_QUEUE: "sd_webui_worker_queue"
-      SD_WEBUI_WORKER_ROUTING_KEY: "*.submit.sd15"
-      SD_WEBUI_CALLBACK_ROUTING_KEY: "*.callback.sd15"
+      WORKER_NAME: "sd_webui_worker_sd15_inpaint"
+      SD_WEBUI_WORKER_QUEUE: "sd_webui_sd15_inpaint_queue"
+      SD_WEBUI_WORKER_ROUTING_KEY: "*.submit.sd15_inpaint"
+      SD_WEBUI_CALLBACK_ROUTING_KEY: "*.callback.sd15_inpaint"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     network_mode: "host"
