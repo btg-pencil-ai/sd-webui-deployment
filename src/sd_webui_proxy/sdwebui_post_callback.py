@@ -41,7 +41,9 @@ def sd_webui_post_callback_processor(params):
             post_request(url=set_sd_webui_options_full_endpoint,payload=sd_webui_options_payload,)
             logger.info(f"Completed switching models")
 
-        result_images = get_generated_images(requests)
+        result_images = []
+        for request in requests:
+            result_images.extend(get_generated_images(request))
 
         if upscale_payload is not None:
             upscaled_and_resized_images = get_upscaled_images(upscale_payload=upscale_payload,resize_width=width,resize_height=height,result_images=result_images)
