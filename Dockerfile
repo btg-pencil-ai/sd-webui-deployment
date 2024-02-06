@@ -31,5 +31,12 @@ RUN command -v conda || (wget --quiet https://repo.anaconda.com/miniconda/Minico
 	/bin/bash ~/miniconda.sh -b -p /opt/conda)
 
 # Create worker environment 'worker'
-RUN conda env list | grep -q 'worker' || (conda env create -f worker_environment.yml)
+# RUN conda env list | grep -q 'worker' || (conda env create -f worker_environment.yml)
+
+# Remove existing worker environment if it exists - this is to reflect any new changes to worker-environment.yml
+RUN conda env remove -n worker -y
+
+# Create the worker environment
+RUN conda env create -f worker_environment.yml
+
 #CMD ["/bin/bash", "launch.sh"]

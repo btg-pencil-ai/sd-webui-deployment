@@ -107,6 +107,7 @@ def set_base64_data_to_redis(base64_image:str)->str:
 def get_base64_data_from_redis(s3_url):
     logger.info("Re-using image base64 from redis")
     base64_image = get_by_redis_key(redis_key=s3_url)
+    base64_image = base64_image.decode('utf-8')
     return base64_image
 
 def get_generated_image_s3_key(
