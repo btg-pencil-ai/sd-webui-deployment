@@ -7,7 +7,8 @@ import time
 import urllib3
 import uuid
 import tempfile
-from src.aws.aws import upload_to_s3
+from src.aws.aws import s3_public_url, upload_to_s3
+from src.common.redis import redis_connection
 
 import src.config as config
 
@@ -72,18 +73,41 @@ def check_server_readiness(init_sleep_seconds: int = 0):
 
     return ready
 
-def url_to_base64_image(url):
-    try:
-        response = requests.get(url)
+def image_to_base64(image:Image, format="JPEG"):
+    image_binary = io.BytesIO()
+    image.save(image_binary, format=format)
+    binary_data = image_binary.getvalue()
 
-        if response.status_code == 200:
-            # Encode the image data as a Base64 string
-            base64_image = base64.b64encode(response.content).decode("utf-8")
-            return base64_image
-        else:
-            print(f"Failed to fetch the image. Status code: {response.status_code}")
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
+    base64_data = base64.b64encode(binary_data).decode('utf-8')
+    return base64_data
+
+def base64_to_image(base64_image):
+    binary_data = base64.b64decode(base64_image)
+
+    # Convert binary data into a PIL Image object
+    original_image = Image.open(io.BytesIO(binary_data))
+    return original_image
+
+def set_redis_key(redis_key: str, base64_str: str):
+    redis_connection.set(redis_key, base64_str)
+    redis_connection.expire(redis_key, config.IMAGE_GENERATION_REDIS_EXPIRE)
+
+def get_by_redis_key(redis_key: str) -> str:
+    value = redis_connection.get(redis_key)  
+    return value
+
+def set_base64_data_to_redis(base64_image:str)->str:
+    s3_key = f"{str(uuid.uuid4())}.jpg"
+    s3_url = s3_public_url(bucket=config.S3_BUCKET,key=s3_key)
+
+    logger.info(f"Setting image base64 data to redis key:{s3_url}")
+    set_redis_key(s3_url, base64_image)
+    return s3_url
+
+def get_base64_data_from_redis(s3_url):
+    logger.info("Re-using image base64 from redis")
+    base64_image = get_by_redis_key(redis_key=s3_url)
+    return base64_image
 
 def get_generated_image_s3_key(
     base_filename: str, client_id: int, batch_uuid: str, image_ext: str
