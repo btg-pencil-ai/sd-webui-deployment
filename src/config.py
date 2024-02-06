@@ -1,6 +1,7 @@
 import os
 
 PLATFORM_ENV = os.environ.get('PLATFORM_ENV', 'development').lower()
+TEST_MODE = PLATFORM_ENV == "test"
 
 RABBIT_URL = os.environ.get('RABBIT_URL', 'amqp://guest:guest@localhost:5672?heartbeat=3600')
 JWT_SECRET = os.environ.get('JWT_SECRET')
