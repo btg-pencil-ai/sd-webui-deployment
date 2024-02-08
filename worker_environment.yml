@@ -9,3 +9,4 @@ dependencies:
     - pillow==10.1.0
     - boto3==1.34.9
     - redis==4.0.1
+    - pottery==2.0.0

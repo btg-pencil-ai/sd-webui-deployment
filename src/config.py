@@ -37,4 +37,5 @@ AWS_S3_BUCKET = os.environ.get("AWS_S3_BUCKET","pencil-production-bucket")
 R2_ENABLED = os.environ.get("R2_ENABLED", "true") == "true"
 
 IMAGE_GENERATION_REDIS_EXPIRE = 3600
+IMAGE_GENERATION_REDIS_LOCK_DURATION_SECONDS = 5
 
