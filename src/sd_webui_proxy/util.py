@@ -153,6 +153,7 @@ def get_redis_keys_tracking_key(job_id:int) -> List:
             if redis_lock is not None:
                 release_redis_lock(redis_lock)
                 logger.info(f"Released generation redis lock {redis_lock}")
+        redis_keys_list = json.loads(redis_keys_list)
     except Exception as e:
         logger.info(f"Couldn't get the redis key:{e}")
         redis_keys_list=[]
