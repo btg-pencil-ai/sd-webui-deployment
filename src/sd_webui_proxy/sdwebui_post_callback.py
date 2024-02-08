@@ -1,11 +1,12 @@
+import json
 from urllib.parse import urljoin
 
 from src.aws.aws import s3_public_url
 import src.config as config
 from src.common import amqp
 from src.common.logger import get_logger
-from src.sd_webui_proxy.constant import GENERATED_IMAGES_S3_BASE_PATH
-from src.sd_webui_proxy.util import get_generated_image_s3_key, set_base64_data_to_redis, upload_base64_to_s3
+from src.sd_webui_proxy.constant import AI_MAGIC_TOOLS_REDIS_KEY_PREFIX, GENERATED_IMAGES_S3_BASE_PATH
+from src.sd_webui_proxy.util import get_by_redis_key, get_generated_image_s3_key, set_base64_data_to_redis, set_redis_keys_tracking_key, upload_base64_to_s3
 from src.sd_webui_proxy.sdwebui_post_callback_util import post_request, get_generated_images, get_upscaled_images
 
 logger = get_logger()
@@ -33,6 +34,11 @@ def sd_webui_post_callback_processor(params):
 
         client_id = callback_payload.get("client_id")
         batch_uuid = callback_payload.get("batch_uuid")
+        job_id = callback_payload.get("job_id")
+
+        redis_key = f"{AI_MAGIC_TOOLS_REDIS_KEY_PREFIX}_{job_id}"
+        redis_keys_list = get_by_redis_key(redis_key)
+        redis_keys_list = json.loads(redis_keys_list)
 
         if sd_webui_options_payload is not None:
             set_sd_webui_options_full_endpoint = urljoin(
@@ -53,6 +59,7 @@ def sd_webui_post_callback_processor(params):
         result_images_s3_urls = []
         for result_image in result_images:
             s3_url = set_base64_data_to_redis(result_image)
+            redis_keys_list.append(s3_url)
             # s3_key = get_generated_image_s3_key(
             #     base_filename=GENERATED_IMAGES_S3_BASE_PATH,
             #     client_id=client_id,
@@ -66,6 +73,7 @@ def sd_webui_post_callback_processor(params):
             result_images_s3_urls.append(s3_url)
 
         callback_payload["result_images"] = result_images_s3_urls
+        set_redis_keys_tracking_key(job_id=job_id,redis_keys_list=redis_keys_list)
 
     except Exception as e:
         callback_payload["result_images"] = None

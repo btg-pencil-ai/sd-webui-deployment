@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import base64
 import logging
@@ -7,6 +8,7 @@ import time
 import urllib3
 import uuid
 import tempfile
+from src.sd_webui_proxy.constant import AI_MAGIC_TOOLS_REDIS_KEY_PREFIX
 from src.aws.aws import s3_public_url, upload_to_s3
 from src.common.redis import redis_connection
 
@@ -127,3 +129,9 @@ def upload_base64_to_s3(base64_data, s3_key):
             key=s3_key,
             public=True,
         )
+
+def set_redis_keys_tracking_key(job_id, redis_keys_list):
+    redis_key = f"{AI_MAGIC_TOOLS_REDIS_KEY_PREFIX}_{job_id}"
+    redis_keys_list_bytes = json.dumps(redis_keys_list)
+    logger.info("Setting all keys to redis")
+    set_redis_key(redis_key=redis_key,value=redis_keys_list_bytes,expiry=7200)
