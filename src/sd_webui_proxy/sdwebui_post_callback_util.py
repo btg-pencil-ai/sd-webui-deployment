@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 import src.config as config
 from src.common.logger import get_logger
 from src.sd_webui_proxy.type import SDWebUIPayload, UpscaleBatchImagesListPayload, BatchImagesListType
-from src.sd_webui_proxy.util import base64_to_image, image_to_base64, get_session, url_to_base64_image
+from src.sd_webui_proxy.util import base64_to_image, image_to_base64, get_session, get_base64_data_from_redis
 
 logger = get_logger()
 session = get_session(config.SERVER_POST_RETRIES, config.SERVER_POST_BACKOFF)
@@ -24,24 +24,24 @@ def replace_image_s3_url_to_base64(payload:SDWebUIPayload):
     input_image_list = payload.get("init_images",[])
     if input_image_list is not None and len(input_image_list)>0:
         input_image_url = input_image_list[0]
-        input_image_base64 = url_to_base64_image(input_image_url)
+        input_image_base64 = get_base64_data_from_redis(input_image_url)
         payload['init_images'] = [input_image_base64]
     
     input_image_url = payload.get("input_image", None)
     if(input_image_url is not None and len(input_image_url)>0):
-        input_image_base64 = url_to_base64_image(input_image_url)
+        input_image_base64 = get_base64_data_from_redis(input_image_url)
         payload['input_image'] = input_image_base64
 
     input_image_mask_url = payload.get("mask", None)
     if(input_image_mask_url is not None and len(input_image_mask_url)>0):
-        input_image_mask_base64 = url_to_base64_image(input_image_mask_url)
+        input_image_mask_base64 = get_base64_data_from_redis(input_image_mask_url)
         payload['mask'] = input_image_mask_base64
     
     if is_controlnet_args_present(payload) is True:
         for cfg in payload['alwayson_scripts']['controlnet']['args']:
             cfg_input_image = cfg.get("input_image")
             if  cfg_input_image is not None and len(cfg_input_image)>0:
-                cfg["input_image"] = url_to_base64_image(cfg_input_image)
+                cfg["input_image"] = get_base64_data_from_redis(cfg_input_image)
 
 def post_request(url, payload, timeout=config.SERVER_POST_TIMEOUT):
     logger.info(f"Posting to {url}")
