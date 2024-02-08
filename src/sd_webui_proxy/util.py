@@ -3,11 +3,13 @@ import json
 import os
 import base64
 import logging
+from typing import List
 import requests
 import time
 import urllib3
 import uuid
 import tempfile
+from src.common.utils import acquire_redis_lock, release_redis_lock
 from src.sd_webui_proxy.constant import AI_MAGIC_TOOLS_REDIS_KEY_PREFIX
 from src.aws.aws import s3_public_url, upload_to_s3
 from src.common.redis import redis_connection
@@ -130,8 +132,56 @@ def upload_base64_to_s3(base64_data, s3_key):
             public=True,
         )
 
+def get_redis_keys_tracking_key(job_id:int) -> List:
+    redis_key = f"{AI_MAGIC_TOOLS_REDIS_KEY_PREFIX}_{job_id}"
+    redis_lock_key = f"{redis_key}_lock"
+    redis_lock = None
+    redis_keys_list = []
+
+    try:
+        try:
+            logger.info(f"Waiting to acquire image generation redis lock {redis_lock_key}")
+            redis_lock = acquire_redis_lock(redis_connection,
+                                            redis_lock_key,
+                                            expire=config.IMAGE_GENERATION_REDIS_LOCK_DURATION_SECONDS,
+                                            auto_renewal=False,
+                                            blocking=True)
+            redis_keys_list = get_by_redis_key(redis_key)
+        except Exception as e:
+            logger.info(f"Couldn't set redis key:{e}")
+        finally:
+            if redis_lock is not None:
+                release_redis_lock(redis_lock)
+                logger.info(f"Released generation redis lock {redis_lock}")
+        redis_keys_list = json.loads(redis_keys_list)
+    except Exception as e:
+        logger.info(f"Couldn't get the redis key:{e}")
+        redis_keys_list=[]
+    finally:
+        return redis_keys_list
+
 def set_redis_keys_tracking_key(job_id, redis_keys_list):
     redis_key = f"{AI_MAGIC_TOOLS_REDIS_KEY_PREFIX}_{job_id}"
-    redis_keys_list_bytes = json.dumps(redis_keys_list)
-    logger.info("Setting all keys to redis")
-    set_redis_key(redis_key=redis_key,value=redis_keys_list_bytes,expiry=7200)
+    redis_lock_key = f"{redis_key}_lock"
+    redis_lock = None
+
+    try:
+        redis_keys_list_bytes = json.dumps(redis_keys_list)
+        try:
+            logger.info(f"Waiting to acquire image generation redis lock {redis_lock_key}")
+            redis_lock = acquire_redis_lock(redis_connection,
+                                                        redis_lock_key,
+                                                        expire=config.IMAGE_GENERATION_REDIS_LOCK_DURATION_SECONDS,
+                                                        auto_renewal=False,
+                                                        blocking=True)
+            logger.info("Setting all keys to redis")
+            set_redis_key(redis_key=redis_key,value=redis_keys_list_bytes,expiry=7200)
+        except Exception as e:
+            logger.info(f"Couldn't set redis key:{e}")
+        finally:
+            if redis_lock is not None:
+                release_redis_lock(redis_lock)
+                logger.info(f"Released generation redis lock {redis_lock}")
+
+    except Exception as e:
+        logger.info(f"Couldn't set redis key:{e}")
