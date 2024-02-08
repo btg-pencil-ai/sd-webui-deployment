@@ -45,6 +45,7 @@ class HuggingFaceModelDownloader():
             {'repo_id': 'lllyasviel/sd-controlnet-scribble', 'filename': 'diffusion_pytorch_model.safetensors', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'lllyasviel/ControlNet', 'filename': 'models/control_sd15_hed.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'lllyasviel/sd_control_collection', 'filename': 'ip-adapter_sd15.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
+            {'repo_id': 'TencentARC/T2I-Adapter', 'filename': 'models_XL/adapter-xl-sketch.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH}
         ]
         
         for model in models_to_download:
