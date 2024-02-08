@@ -90,9 +90,9 @@ def base64_to_image(base64_image):
     original_image = Image.open(io.BytesIO(binary_data))
     return original_image
 
-def set_redis_key(redis_key: str, base64_str: str):
-    redis_connection.set(redis_key, base64_str)
-    redis_connection.expire(redis_key, config.IMAGE_GENERATION_REDIS_EXPIRE)
+def set_redis_key(redis_key: str, value: str, expiry=config.IMAGE_GENERATION_REDIS_EXPIRE):
+    redis_connection.set(redis_key, value)
+    redis_connection.expire(redis_key, expiry)
 
 def get_by_redis_key(redis_key: str) -> str:
     value = redis_connection.get(redis_key)  
