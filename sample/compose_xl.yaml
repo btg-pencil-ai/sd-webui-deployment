@@ -1,0 +1,35 @@
+services:
+  sd-webui-server-sdxl:
+    image: sd-webui-deployment:latest
+    command: /bin/bash -c "./launch.sh"
+    tty: true
+    volumes:
+      - /mnt/data/docker/sd-webui-hf-home:/hf-home
+      - /mnt/data/docker/sd-webui-models:/stable-diffusion-webui/models
+      - /mnt/data/docker/sd-webui-controlnet-models:/stable-diffusion-webui/extensions/sd-webui-controlnet/models
+      - /mnt/data/docker/sd-webui-codeformer-models:/stable-diffusion-webui/repositories/CodeFormer/weights
+    environment:
+      SD_VERSION: "SDXL"
+    network_mode: "host"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  sd-webui-worker-sdxl:
+    image: sd-webui-deployment:latest
+    command: /bin/bash -c "conda run --no-capture-output -n worker python3 worker.py --worker sd_webui_worker_sdxl"
+    environment:
+      RABBIT_URL: "amqp://guest:guest@localhost:5672?heartbeat=3600"
+      EXCHANGE_NAME: "pencil_exchange"
+      WORKER_NAME: "sd-webui-worker-sdxl"
+      SD_WEBUI_WORKER_QUEUE: "sd_webui_sdxl_queue"
+      SD_WEBUI_WORKER_ROUTING_KEY: "*.submit.sdxl"
+      SD_WEBUI_CALLBACK_ROUTING_KEY: "*.callback.sdxl"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+    network_mode: "host"

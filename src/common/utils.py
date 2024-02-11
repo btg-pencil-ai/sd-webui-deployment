@@ -1,6 +1,8 @@
 
+from typing import Optional
 from src.common.logger import get_logger
-
+from pottery import Redlock
+from redis import Redis
 
 logger = get_logger(__name__)
 
@@ -81,3 +83,39 @@ def print_sanitized_params(params, hide_jwt=True, hide_list=False):
             logger.info(f'{k}: Unable to serialize. E:{e}')
 
     logger.info('-' * 30)
+
+def acquire_redis_lock(redis_connection: Redis, redis_lock_key: str,
+                       expire: Optional[float] = 30,
+                       auto_renewal: Optional[bool] = False,
+                       blocking: Optional[bool] = True):
+    if auto_renewal is True:
+        logger.warning("Moved to safer pottery.Redlock implementation - auto_renewal not supported!")
+
+    if redis_lock_key is not None:
+        redis_lock_object = Redlock(key=redis_lock_key,
+                                    masters={redis_connection},
+                                    auto_release_time=int(expire * 1000))
+
+        # Block code here until we can get the lock
+        logger.info("Waiting to acquire redis lock %s" % redis_lock_key)
+        if redis_lock_object.acquire(blocking=blocking, timeout=expire):
+            pass
+
+        else:
+            logger.warning(f"Failed to get lock {redis_lock_key} after {expire} seconds - going ahead anyway!")
+
+    else:
+        logger.warning("No lock to acquire (key is None)")
+        redis_lock_object = None
+
+    return redis_lock_object
+
+
+def release_redis_lock(redis_lock_object):
+    if redis_lock_object is not None:
+        try:
+            logger.info("Release redis lock")
+            redis_lock_object.release()
+
+        except Exception as e:
+            logger.warning(e, exc_info=True)
