@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sd-webui-sd21-unclip
+spec:
+  selector:
+    matchLabels:
+      component: sd-webui-sd21-unclip
+  replicas: ${POD_REPLICAS_SD_UNCLIP_WEBUI_SERVER}
+  template:
+    metadata:
+      labels:
+        component: sd-webui-sd21-unclip
+    spec:
+      volumes:
+      - name: sd-webui-pv
+        persistentVolumeClaim:
+          claimName: ${PERSISTENT_VOLUME_CLAIM_NAME}
+      containers:
+      - name: sd-webui-server-sd21-unclip
+        image: "$DOCKER_REGISTRY/$NAMESPACE/$SERVICE_NAME:$TAG"
+        imagePullPolicy: Always
+        tty: true
+        command: ["/bin/bash", "-c"]
+        args:
+          - ./launch.sh
+        volumeMounts:
+          - name: sd-webui-pv
+            mountPath: /hf-home
+            subPath: sd-webui-hf-home
+          - name: sd-webui-pv
+            mountPath: /stable-diffusion-webui/models/
+            subPath: sd-webui-models
+          - name: sd-webui-pv
+            mountPath: /stable-diffusion-webui/extensions/sd-webui-controlnet/models
+            subPath: sd-webui-controlnet-models
+          - name: sd-webui-pv
+            mountPath: /stable-diffusion-webui/extensions/sd-webui-controlnet/annotator/downloads/clip_vision
+            subPath: sd-webui-annotator-models
+          - name: sd-webui-pv
+            mountPath: /stable-diffusion-webui/repositories/CodeFormer/weights
+            subPath: sd-webui-codeformer-models
+        resources:
+          requests:
+            cpu: 5500m
+            memory: 28Gi
+          limits:
+            cpu: 5500m
+            memory: 28Gi
+            nvidia.com/gpu: 1
+        env:
+          - name: SD_VERSION
+            value: "SD21_UNCLIP"
+      - name: sd-webui-worker-sd21-unclip
+        image: "$DOCKER_REGISTRY/$NAMESPACE/$SERVICE_NAME:$TAG"
+        imagePullPolicy: Always
+        tty: true
+        command: ["/bin/bash", "-c"]
+        args:
+          - conda run --no-capture-output -n worker python3 --version && conda run --no-capture-output -n worker python3 worker.py --worker sd_webui_worker_sd21_unclip
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        env:
+          - name: SD_VERSION
+            value: "SD21_UNCLIP"
+          - name: SD_WEBUI_API_ENDPOINT
+            value: "http://localhost:7860"
+          - name: RABBIT_URL
+            value: "${RABBIT_URL}"
+          - name: EXCHANGE_NAME
+            value: "${EXCHANGE_NAME}"
+          - name: AWS_ACCESS_KEY_ID
+            value: "${AWS_ACCESS_KEY_ID}"
+          - name: AWS_SECRET_ACCESS_KEY
+            value: "${AWS_SECRET_ACCESS_KEY}"
+          - name: REDIS_HOST
+            value: "${GCP_REDIS_HOST}"
+          - name: REDIS_PORT
+            value: "${REDIS_PORT}"
+          - name: REDIS_DB
+            value: "${REDIS_DB}"
+          - name: AWS_S3_BUCKET
+            value: "${AWS_S3_BUCKET}"
