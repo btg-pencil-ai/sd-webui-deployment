@@ -45,8 +45,11 @@ def sd_webui_post_callback_processor(params):
             logger.info(f"Completed switching models")
 
         result_images = []
+        all_seeds_list = []
         for request in requests:
-            result_images.extend(get_generated_images(request))
+            images_list, seeds_list = get_generated_images(request)
+            result_images.extend(images_list)
+            all_seeds_list.extend(seeds_list)
 
         if upscale_payload is not None:
             upscaled_and_resized_images = get_upscaled_images(upscale_payload=upscale_payload,resize_width=width,resize_height=height,result_images=result_images)
@@ -57,19 +60,11 @@ def sd_webui_post_callback_processor(params):
         for result_image in result_images:
             s3_url = set_base64_data_to_redis(result_image)
             redis_keys_list.append(s3_url)
-            # s3_key = get_generated_image_s3_key(
-            #     base_filename=GENERATED_IMAGES_S3_BASE_PATH,
-            #     client_id=client_id,
-            #     batch_uuid=batch_uuid,
-            #     image_ext="jpg",
-            # )
-            # upload_base64_to_s3(result_image, s3_key)
-            # s3_url = s3_public_url(config.AWS_S3_BUCKET, s3_key)
-            # logger.info(f"Generated image saved to {s3_url}")
-
             result_images_s3_urls.append(s3_url)
 
         callback_payload["result_images"] = result_images_s3_urls
+        callback_payload["all_seeds"] = all_seeds_list
+        
         set_redis_keys_tracking_key(job_id=job_id,redis_keys_list=redis_keys_list)
 
     except Exception as e:
