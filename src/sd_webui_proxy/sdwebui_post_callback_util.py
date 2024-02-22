@@ -53,6 +53,7 @@ def post_request(url, payload, timeout=config.SERVER_POST_TIMEOUT):
 def get_generated_images(requests):
 
     result_images = []
+    seeds_list = []
     for request in requests:
         endpoint = request.get("endpoint", None)
         assert endpoint,"endpoint cannot be None"
@@ -83,6 +84,7 @@ def get_generated_images(requests):
             result_images = response_json.get("images", None) or [
                 response_json.get("image", None)
             ]
+            seeds_list = json.loads(response_json["info"])["all_seeds"]
             if no_of_samples is not None:
                 result_images = result_images[:no_of_samples]
 
@@ -95,7 +97,8 @@ def get_generated_images(requests):
                     result_images[ind] = b64_image
         except:
             result_images = []
-    return result_images
+            seeds_list = []
+    return result_images, seeds_list
 
 def get_resized_images(images:List, resize_width:int, resize_height:int) -> List:
     resized_images = []
