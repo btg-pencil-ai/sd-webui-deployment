@@ -13,6 +13,9 @@ logger = get_logger()
 session = get_session(config.SERVER_POST_RETRIES, config.SERVER_POST_BACKOFF)
 
 def is_controlnet_args_present(payload:SDWebUIPayload):
+    """
+    Checks and returns whether there are controlnet arguments present in a config or not
+    """
     return (
         payload.get('alwayson_scripts') is not None
         and payload.get('alwayson_scripts').get('controlnet') is not None
@@ -21,7 +24,9 @@ def is_controlnet_args_present(payload:SDWebUIPayload):
     )
 
 def replace_image_s3_url_to_base64(payload:SDWebUIPayload):
-
+    """
+    replaces all s3 url redis keys with the corresponding base64 data so as to generate through SD WebUI
+    """
     input_image_list = payload.get("init_images",[])
     if input_image_list is not None and len(input_image_list)>0:
         input_image_url = input_image_list[0]
@@ -45,13 +50,18 @@ def replace_image_s3_url_to_base64(payload:SDWebUIPayload):
                 cfg["input_image"] = get_base64_data_from_redis(cfg_input_image)
 
 def post_request(url, payload, timeout=config.SERVER_POST_TIMEOUT):
+    """
+    Posts requests to SD WebUI server and returns the result
+    """
     logger.info(f"Posting to {url}")
     response = session.post(url=url, json=payload, timeout=timeout)
     response.raise_for_status()
     return response
 
 def get_generated_images(requests):
-
+    """
+    For each config, image generation is triggered and returns generated_images base64 data
+    """
     result_images = []
     seeds_list = []
     for request in requests:
@@ -88,6 +98,7 @@ def get_generated_images(requests):
             if no_of_samples is not None:
                 result_images = result_images[:no_of_samples]
 
+            # If resize is required before inputing the output of one pipeline to the next pipeline
             if resize_payload is not None:
                 resize_width, resize_height = resize_payload.get("resize_width"), resize_payload.get("resize_height")
                 for ind,img in enumerate(result_images):
@@ -100,7 +111,10 @@ def get_generated_images(requests):
             seeds_list = []
     return result_images, seeds_list
 
-def get_upscaled_images(upscale_payload, resize_width, resize_height, result_images=None):
+def get_upscaled_and_resized_images(upscale_payload, resize_width, resize_height, result_images=None):
+    """
+    Returns upscaled images
+    """
     upscale_full_endpoint = urljoin(config.SD_WEBUI_API_ENDPOINT, config.BATCH_UPSCALE_ENDPOINT)
     upscaled_images_list = upscale_payload.get("imageList",None)
 
@@ -116,7 +130,6 @@ def get_upscaled_images(upscale_payload, resize_width, resize_height, result_ima
         upscale_payload.update(upscaled_images_list)
 
     upscale_response = post_request(url=upscale_full_endpoint,payload=upscale_payload,)
-
     upscale_response_json = upscale_response.json()
     upscaled_images = upscale_response_json.get("images", [])
 
