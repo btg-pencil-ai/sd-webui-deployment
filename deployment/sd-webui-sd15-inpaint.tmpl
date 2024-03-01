@@ -12,6 +12,16 @@ spec:
       labels:
         component: sd-webui-sd15-inpaint
     spec:
+      tolerations:
+        - key: pool
+          operator: Equal
+          value: gpu-machines
+          effect: NoSchedule
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      nodeSelector:
+        pool: gpu-machines
       volumes:
       - name: sd-webui-pv
         persistentVolumeClaim:
