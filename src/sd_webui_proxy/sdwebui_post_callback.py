@@ -12,6 +12,11 @@ logger = get_logger()
 
 def sd_webui_post_callback_processor(params):
     try:
+        """
+        Accepts config from genai-server and preprocess the config to send to SD WebUI worker.
+        Post generation the images will be sent to callback queue with the callback_payload + generated_images
+        """
+
         callback_message = params.get("callback_message", {})
 
         callback_routing_key = callback_message.get("routing_key", None)
@@ -30,8 +35,6 @@ def sd_webui_post_callback_processor(params):
         width = callback_payload.get("gen_image_width")
         height = callback_payload.get("gen_image_height")
 
-        client_id = callback_payload.get("client_id")
-        batch_uuid = callback_payload.get("batch_uuid")
         job_id = callback_payload.get("job_id")
 
         redis_keys_list = get_redis_keys_tracking_key(job_id=job_id)
@@ -43,10 +46,15 @@ def sd_webui_post_callback_processor(params):
             post_request(url=set_sd_webui_options_full_endpoint,payload=sd_webui_options_payload,)
             logger.info(f"Completed switching models")
 
+        # Generate images using SD WebUI
         result_images = []
+        all_seeds_list = []
         for request in requests:
-            result_images.extend(get_generated_images(request))
+            images_list, seeds_list = get_generated_images(request)
+            result_images.extend(images_list)
+            all_seeds_list.extend(seeds_list)
 
+        # Upscale the generated images
         if upscale_payload is not None:
             upscaled_images = get_upscaled_images(upscale_payload=upscale_payload, result_images=result_images)
             result_images = list(filter(None, upscaled_images))
@@ -55,24 +63,17 @@ def sd_webui_post_callback_processor(params):
         if width is not None and height is not None:     
             result_images = get_resized_images(images=result_images, resize_width=width, resize_height=height)
 
-        # convert to s3 urls
+        # To pass it on save the base64 data to redis keys and update the tracking keys list
         result_images_s3_urls = []
         for result_image in result_images:
             s3_url = set_base64_data_to_redis(result_image)
             redis_keys_list.append(s3_url)
-            # s3_key = get_generated_image_s3_key(
-            #     base_filename=GENERATED_IMAGES_S3_BASE_PATH,
-            #     client_id=client_id,
-            #     batch_uuid=batch_uuid,
-            #     image_ext="jpg",
-            # )
-            # upload_base64_to_s3(result_image, s3_key)
-            # s3_url = s3_public_url(config.AWS_S3_BUCKET, s3_key)
-            # logger.info(f"Generated image saved to {s3_url}")
-
             result_images_s3_urls.append(s3_url)
 
+        # Pass on result images references and seeds for post processing
         callback_payload["result_images"] = result_images_s3_urls
+        callback_payload["all_seeds"] = all_seeds_list
+        
         set_redis_keys_tracking_key(job_id=job_id,redis_keys_list=redis_keys_list)
 
     except Exception as e:
