@@ -94,7 +94,10 @@ def get_generated_images(requests):
             result_images = response_json.get("images", None) or [
                 response_json.get("image", None)
             ]
-            seeds_list = json.loads(response_json["info"])["all_seeds"]
+            response_info = response_json.get("info")
+            if response_info is not None:
+                seeds_list = json.loads(response_info).get("all_seeds")
+
             if no_of_samples is not None:
                 result_images = result_images[:no_of_samples]
 
