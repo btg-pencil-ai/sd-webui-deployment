@@ -6,7 +6,7 @@ import src.config as config
 from src.common import amqp
 from src.common.logger import get_logger
 from src.sd_webui_proxy.util import get_redis_keys_tracking_key, set_base64_data_to_redis, set_redis_keys_tracking_key, upload_base64_to_s3
-from src.sd_webui_proxy.sdwebui_post_callback_util import post_request, get_generated_images, get_upscaled_images
+from src.sd_webui_proxy.sdwebui_post_callback_util import get_resized_images, post_request, get_generated_images, get_upscaled_images
 
 logger = get_logger()
 
@@ -22,8 +22,7 @@ def sd_webui_post_callback_processor(params):
 
         callback_priority = callback_message.get("callback_priority", 255)
 
-        requests = params.get("requests", [])
-        assert requests, "requests is empty"
+        requests = params.get("requests", []) or []
 
         sd_webui_options_payload = params.get("sd_webui_options_payload", None)
         upscale_payload = params.get("upscale_payload", None)
@@ -49,8 +48,12 @@ def sd_webui_post_callback_processor(params):
             result_images.extend(get_generated_images(request))
 
         if upscale_payload is not None:
-            upscaled_and_resized_images = get_upscaled_images(upscale_payload=upscale_payload,resize_width=width,resize_height=height,result_images=result_images)
-            result_images = list(filter(None, upscaled_and_resized_images))
+            upscaled_images = get_upscaled_images(upscale_payload=upscale_payload, result_images=result_images)
+            result_images = list(filter(None, upscaled_images))
+
+        # Resize if required
+        if width is not None and height is not None:     
+            result_images = get_resized_images(images=result_images, resize_width=width, resize_height=height)
 
         # convert to s3 urls
         result_images_s3_urls = []
