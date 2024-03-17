@@ -1,5 +1,6 @@
 from dataclasses import asdict
-from typing import Union
+import json
+from typing import List, Union
 from PIL import Image
 from urllib.parse import urljoin
 
@@ -96,31 +97,42 @@ def get_generated_images(requests):
             result_images = []
     return result_images
 
-def get_upscaled_images(upscale_payload, resize_width, resize_height, result_images=None):
-    upscale_full_endpoint = urljoin(config.SD_WEBUI_API_ENDPOINT, config.BATCH_UPSCALE_ENDPOINT)
-    upscaled_images_list = upscale_payload.get("imageList",None)
-
-    if upscaled_images_list is None:
-        upscaled_images_list = asdict(
-            UpscaleBatchImagesListPayload(
-                imageList=[
-                    asdict((BatchImagesListType(name=f"image_{index}", data=image)))
-                    for index, image in enumerate(result_images)
-                ]
-            )
-        )
-        upscale_payload.update(upscaled_images_list)
-
-    upscale_response = post_request(url=upscale_full_endpoint,payload=upscale_payload,)
-
-    upscale_response_json = upscale_response.json()
-    upscaled_images = upscale_response_json.get("images", [])
-
+def get_resized_images(images:List, resize_width:int, resize_height:int) -> List:
     resized_images = []
-    for img in upscaled_images:
+    for img in images:
         decoded_image = base64_to_image(img)
         final_image = decoded_image.resize((resize_width, resize_height), Image.LANCZOS)
         final_image_encoded = image_to_base64(final_image)
         resized_images.append(final_image_encoded)
-    
     return resized_images
+
+def get_upscaled_images(upscale_payload, result_images=[]):
+    """
+    Returns upscaled images
+    """
+    upscale_full_endpoint = urljoin(config.SD_WEBUI_API_ENDPOINT, config.BATCH_UPSCALE_ENDPOINT)
+    upscaled_images_list = upscale_payload.get("imageList", []) or []
+
+    image_list = []
+    if len(result_images) > 0:
+        image_list = result_images
+    else:
+        for image in upscaled_images_list:
+            image_list.append(get_base64_data_from_redis(image))
+    
+    assert image_list, "Upscale image list cannot be empty or None"
+    upscaled_images_list = asdict(UpscaleBatchImagesListPayload(
+                imageList=[
+                    asdict((BatchImagesListType(name=f"image_{index}", data=image)))
+                    for index, image in enumerate(image_list)
+                ]
+            )
+        )
+    upscale_payload.update(upscaled_images_list)
+            
+    upscale_response = post_request(url=upscale_full_endpoint,payload=upscale_payload,)
+
+    upscale_response_json = upscale_response.json()
+    upscaled_images = upscale_response_json.get("images", [])
+    
+    return upscaled_images

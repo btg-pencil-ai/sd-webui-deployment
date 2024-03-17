@@ -21,17 +21,25 @@ cd /stable-diffusion-webui
 if [ ${SD_VERSION} == "SD15" ]; then
     # Append flags for 'SD15'
     LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/v1-5-pruned-emaonly.safetensors \
-        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt"
+        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt \
+        --medvram"
 
 elif [ ${SD_VERSION} == "SD15_INPAINT" ]; then
     # Append flags for other cases
     LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/sd-v1-5-inpainting.ckpt \
-        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt"
+        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt \
+        --medvram"
 
 elif [ ${SD_VERSION} == "SDXL" ]; then
     # Append flags for other cases
     LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/sd_xl_base_1.0.safetensors \
-        --vae-path ${MAIN_MODELS_PATH}/VAE/sdxl_vae.safetensors"
+        --vae-path ${MAIN_MODELS_PATH}/VAE/sdxl_vae.safetensors \
+        --medvram"
+
+elif [ ${SD_VERSION} == "SD21_UNCLIP" ]; then
+    # Append flags for other cases
+    LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/sd21-unclip-h.ckpt \
+        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt"
 
 else
     echo "Invalid SD_VERSION ${SD_VERSION}"
@@ -48,7 +56,6 @@ LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4" python3 launch.py  ${LAU
     --skip-prepare-environment \
     --skip-install \
     --no-download-sd-model \
-    --medvram \
     --medvram-sdxl \
     --api \
     --listen \
