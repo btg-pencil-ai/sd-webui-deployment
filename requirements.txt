@@ -1,9 +1,9 @@
-pyjwt==1.7.1
+pyjwt==2.4.0
 pika==0.13.1
 xformers==0.0.22
 accelerate==0.21.0
 requests==2.31.0
-pillow==10.1.0
+pillow==10.3.0
 boto3==1.34.9
 redis==4.0.1
 pottery==2.0.0
