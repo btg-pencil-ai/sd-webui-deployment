@@ -1,0 +1,91 @@
+name: Build and Push to GARs
+
+on:
+  workflow_dispatch:
+    inputs:
+      Environment:
+        required: true
+        type: choice
+        description: Choose env
+        options:
+          - stg
+          - prd
+          - hydra
+      RUNNER:
+        type: choice
+        default: "ubuntu-latest"
+        description: Choose Runner for the Workflow
+        options:
+        - "self-hosted-runner"
+        - "ubuntu-latest"
+  push:
+    branches:
+      - development
+      # - main
+      # - release-pro
+
+env:
+  SERVICE_NAMES: sd-webui-server
+
+
+  
+jobs:
+  prepare-env:
+    name: Prepare Env
+    runs-on: ${{ (inputs.RUNNER) || 'ubuntu-latest' }}
+    timeout-minutes: 2
+    outputs:
+      SERVICE_ACCOUNT: ${{ steps.variable.outputs.SERVICE_ACCOUNT }}
+      OIDC_PROVIDER: ${{ steps.variable.outputs.OIDC_PROVIDER }}
+      GAR_REPOSITORY: ${{ steps.variable.outputs.GAR_REPOSITORY }}
+      ENV: ${{ steps.variable.outputs.ENV }}
+      SLACK_WEBHOOK_URL: ${{ steps.variable.outputs.SLACK_WEBHOOK_URL }}
+
+    steps:
+      - id: variable
+        uses: btg-pencil-ai/kube-deployment/workflows/composite/prepare-env@main
+
+  build-push-image:
+    name: Build and Push Image
+    runs-on: ${{ (inputs.RUNNER) || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    permissions:
+      id-token: write
+      pull-requests: write
+      contents: read
+    needs: prepare-env
+    env:
+      SERVICE_ACCOUNT: ${{ needs.prepare-env.outputs.SERVICE_ACCOUNT }}
+      OIDC_PROVIDER: ${{ needs.prepare-env.outputs.OIDC_PROVIDER }}
+      ENV: ${{ needs.prepare-env.outputs.ENV }}
+      GAR_REPOSITORY: ${{ needs.prepare-env.outputs.GAR_REPOSITORY }}
+
+    steps:
+    - id: build-push-image
+      uses: btg-pencil-ai/kube-deployment/workflows/composite/build-push@main
+      with: 
+        SERVICE_ACCOUNT: ${{ vars[env.SERVICE_ACCOUNT] }}
+        OIDC_PROVIDER: ${{ vars[env.OIDC_PROVIDER] }}
+        DOCKERFILE_PATH: ${{ env.DOCKERFILE_PATH }}
+        DOCKERFILE_CONTEXT_PATH:  ${{ env.DOCKERFILE_CONTEXT_PATH }}
+        DOCKER_BUILDARGS: ${{ env.DOCKER_BUILDARGS}}
+        GAR_REPOSITORY: ${{ env.GAR_REPOSITORY }}
+
+
+### slack alert
+
+  slack-notification:
+    name: Slack Notification
+    if: always()
+    runs-on: ${{ (inputs.RUNNER) || 'ubuntu-latest' }}
+    needs:
+      - prepare-env
+      - build-push-image
+    env:
+     SLACK_WEBHOOK_URL: ${{needs.prepare-env.outputs.SLACK_WEBHOOK_URL}}
+
+    steps:
+      - id: slack-notification
+        uses: btg-pencil-ai/kube-deployment/workflows/composite/slack-alert@main
+        with: 
+          SLACK_WEBHOOK_URL: ${{ vars[env.SLACK_WEBHOOK_URL] }}
