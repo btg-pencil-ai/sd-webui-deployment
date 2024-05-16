@@ -108,6 +108,12 @@ jobs:
       GAR_REPOSITORY: ${{ needs.prepare-env.outputs.GAR_REPOSITORY }}
 
     steps:
+      - name: check avaible size
+        id: check-size
+        shell: bash
+        run: |
+          df -h
+
       - uses: "actions/checkout@v4"
 
       - name: Set up Docker Context for Buildx
