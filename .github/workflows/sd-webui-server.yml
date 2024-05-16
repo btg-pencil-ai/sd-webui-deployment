@@ -179,7 +179,7 @@ jobs:
           echo ":sunny: Image -->  ${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:$IMAGE_TAG" >> $GITHUB_STEP_SUMMARY
   
       - name: Build and push to GAR
-        uses: docker/build-push-action@v5.1.0
+        uses: docker/build-push-action@v5.3.0
         if: ${{ env.ENV == 'stg' }}
         with:
           context: .
@@ -193,27 +193,27 @@ jobs:
             europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
   
       - name: Build and push to GAR
-        uses: docker/build-push-action@v5.1.0
+        uses: docker/build-push-action@v5.3.0
         if: ${{ env.ENV == 'prd' }}
         with:
           context: .
           file: Dockerfile
           push: true
           no-cache: true
-          platforms: linux/am
+          platforms: linux/amd64
           tags: |
             asia-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
             us-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
             europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
   
       - name: Build and push to GAR
-        uses: docker/build-push-action@v5.1.0
+        uses: docker/build-push-action@v5.3.0
         if: ${{ env.ENV == 'hydra' }}
         with:
           context: .
           file: Dockerfile
           push: true
-          platforms: linux/am
+          platforms: linux/amd64
           tags: |
             asia-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
 
