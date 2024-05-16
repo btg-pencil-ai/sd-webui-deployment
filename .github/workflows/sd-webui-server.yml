@@ -13,12 +13,12 @@ on:
           - hydra
       RUNNER:
         type: choice
-        default: "large_runner"
+        default: "2nd-Large-Runner"
         description: Choose Runner for the Workflow
         options:
         - "self-hosted-runner"
         - "ubuntu-latest"
-        - "large_runner"
+        - "2nd-Large-Runner"
   push:
     branches:
       - development
@@ -94,7 +94,7 @@ jobs:
 
   build-push-image:
     name: Build and Push Image
-    runs-on: ${{ (inputs.RUNNER) || 'large_runner' }}
+    runs-on: ${{ (inputs.RUNNER) || '2nd-Large-Runner' }}
     timeout-minutes: 20
     permissions:
       id-token: write
