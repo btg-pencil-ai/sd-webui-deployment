@@ -71,11 +71,11 @@ jobs:
           if [[ $ENV == 'prd' && $BRANCH == 'main' ]]; then
             echo "SERVICE_ACCOUNT=${ENV}_SERVICE_ACCOUNT" >> $GITHUB_OUTPUT
             echo "OIDC_PROVIDER=${ENV}_OIDC_PROVIDER" >> $GITHUB_OUTPUT
-            echo "GAR_REPOSITORY=pencil-${ENV}-app-container-registry" >> $GITHUB_OUTPUT
+            echo "GAR_REPOSITORY=pencil-app-container-registry" >> $GITHUB_OUTPUT
           elif [[ $ENV == 'prd' || $BRANCH == 'release-pro' ]]; then
             echo "SERVICE_ACCOUNT=${ENV}_SERVICE_ACCOUNT" >> $GITHUB_OUTPUT
             echo "OIDC_PROVIDER=${ENV}_OIDC_PROVIDER" >> $GITHUB_OUTPUT
-            echo "GAR_REPOSITORY=pencil-${ENV}-pro-container-registry" >> $GITHUB_OUTPUT      
+            echo "GAR_REPOSITORY=pencil-pro-container-registry" >> $GITHUB_OUTPUT      
           elif [[ $ENV == 'stg' || $ENV == 'hydra' ]]; then
             echo "SERVICE_ACCOUNT=${ENV}_SERVICE_ACCOUNT" >> $GITHUB_OUTPUT
             echo "OIDC_PROVIDER=${ENV}_OIDC_PROVIDER" >> $GITHUB_OUTPUT
