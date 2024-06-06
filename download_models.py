@@ -122,45 +122,32 @@ class ModelDownloader():
 
         # Check if the file already exists in the local directory
         if not os.path.exists(target_path):
-            models_api_endpoint = "https://civitai.com/api/v1/models/"
-
-            model_id_match = re.search(r'models/(\d+)', model['model_url'])
-            if not model_id_match:
-                logger.error("Invalid URL format for model ID: %s", model['model_url'])
-
-            endpoint = models_api_endpoint + model_id_match.group(1)
-
-            # Get model data from Civit AI model api
             try:
+                models_api_endpoint = "https://civitai.com/api/v1/models/"
+                model_id_match = re.search(r'models/(\d+)', model['model_url'])
+                assert model_id_match, f"Invalid URL format for model ID: {model['model_url']}"
+                endpoint = models_api_endpoint + model_id_match.group(1)
+
+                # Get model data from Civit AI model api
                 response = requests.get(endpoint, timeout=API_TIMEOUT)
                 response.raise_for_status()
-            except requests.RequestException as e:
-                logger.error("Error in HTTP request: %s", e)
-
-            try:
                 data = response.json()
-            except ValueError:
-                logger.error("Response content is not valid JSON")
 
-            # Get model version and download URL from model data
-            model_version_id_match = re.search(r'modelVersionId=(\d+)', model['model_url'])
-            download_url = None
-            if model_version_id_match:
-                model_version_id = int(model_version_id_match.group(1))
-                for model_version in data.get('modelVersions', []):
-                    if model_version['id'] == model_version_id:
-                        download_url = model_version.get('downloadUrl')
-                        break
-                if not download_url:
-                    logger.error("Model version ID not found in model data")
-            else:
-                download_url = data.get('modelVersions', [{}])[0].get('downloadUrl')
+                # Get model version and download URL from model data
+                model_version_id_match = re.search(r'modelVersionId=(\d+)', model['model_url'])
+                download_url = None
+                if model_version_id_match:
+                    model_version_id = int(model_version_id_match.group(1))
+                    for model_version in data.get('modelVersions', []):
+                        if model_version['id'] == model_version_id:
+                            download_url = model_version.get('downloadUrl')
+                            break
+                    assert download_url, "Model version ID not found in model data"
+                else:
+                    download_url = data.get('modelVersions', [{}])[0].get('downloadUrl')
+                assert download_url, "Download URL not found"
 
-            if not download_url:
-                logger.error("Download URL not found")
-
-            # Download model from Civit AI
-            try:
+                # Download model from Civit AI
                 with requests.get(download_url, stream=True, timeout=API_TIMEOUT) as response:
                     response.raise_for_status()
                     total_size = int(response.headers.get('content-length', 0))
@@ -173,10 +160,6 @@ class ModelDownloader():
                                 file.write(chunk)
                                 pbar.update(len(chunk))
                 logger.info("%s downloaded successfully", filename)
-            except requests.RequestException as e:
-                logger.error("Error downloading the file: %s", e)
-            except IOError as e:
-                logger.error("Error writing file: %s", e)
             except Exception as e:
                 logger.exception("An unexpected error occurred while downloading %s: %s", filename, e)
         else:
@@ -200,7 +183,7 @@ class ModelDownloader():
                 progress_bar.close()
                 logger.info("%s downloaded successfully", filename)
             except Exception as e:
-                logger.error("Failed to download model %s from S3: %s", filename, e)
+                logger.exception("An unexpected error occurred while downloading %s: %s", filename, e)
         else:
             logger.info("%s already exists in the local directory, skipping download.", filename)
 
