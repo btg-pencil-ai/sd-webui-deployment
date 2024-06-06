@@ -59,7 +59,7 @@ jobs:
             INFRA*)
               ENV="hydra"
               ;;
-            "main")
+            "main" | "release-pro")
               ENV="prd"
               ;;
             *)
