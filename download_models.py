@@ -68,6 +68,7 @@ class ModelDownloader():
             {'repo_id': 'lllyasviel/sd_control_collection', 'filename': 'ip-adapter_sd15.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'TencentARC/T2I-Adapter', 'filename': 'models_XL/adapter-xl-sketch.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'stabilityai/stable-diffusion-2-1-unclip', 'filename': 'sd21-unclip-h.ckpt', 'filepath': STABLE_DIFFUSION_MODELS_PATH},
+            {'repo_id': 'lllyasviel/ControlNet-v1-1', 'filename': 'control_v11f1e_sd15_tile.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
         ]
 
         civit_ai_models_to_download = [
