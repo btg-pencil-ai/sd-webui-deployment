@@ -96,7 +96,7 @@ def get_generated_images(requests, interrogate_prompt=""):
 
             interrogate_response = post_request(
                 url=interrogate_endpoint, payload=interrogate_payload)
-            interrogate_prompt = interrogate_response.text
+            interrogate_prompt = interrogate_response.json()['caption']
 
             prompt = payload.get('prompt', "")
             payload['prompt'] = f"{interrogate_prompt} {prompt}"
