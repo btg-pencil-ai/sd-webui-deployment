@@ -1,22 +1,20 @@
-import json
 from urllib.parse import urljoin
 
-from src.aws.aws import s3_public_url
 import src.config as config
 from src.common import amqp
 from src.common.logger import get_logger
-from src.sd_webui_proxy.util import get_redis_keys_tracking_key, set_base64_data_to_redis, set_redis_keys_tracking_key, upload_base64_to_s3
+from src.sd_webui_proxy.util import get_redis_keys_tracking_key, set_base64_data_to_redis, set_redis_keys_tracking_key
 from src.sd_webui_proxy.sdwebui_post_callback_util import get_resized_images, post_request, get_generated_images, get_upscaled_images
 
 logger = get_logger()
 
-def sd_webui_post_callback_processor(params):
-    try:
-        """
-        Accepts config from genai-server and preprocess the config to send to SD WebUI worker.
-        Post generation the images will be sent to callback queue with the callback_payload + generated_images
-        """
 
+def sd_webui_post_callback_processor(params):
+    """
+    Accepts config from genai-server and preprocess the config to send to SD WebUI worker.
+    Post generation the images will be sent to callback queue with the callback_payload + generated_images
+    """
+    try:
         callback_message = params.get("callback_message", {})
 
         callback_routing_key = callback_message.get("routing_key", None)
@@ -43,25 +41,28 @@ def sd_webui_post_callback_processor(params):
             set_sd_webui_options_full_endpoint = urljoin(
                 config.SD_WEBUI_API_ENDPOINT, config.SET_SD_WEBUI_OPTIONS_ENDPOINT
             )
-            post_request(url=set_sd_webui_options_full_endpoint,payload=sd_webui_options_payload,)
-            logger.info(f"Completed switching models")
+            post_request(url=set_sd_webui_options_full_endpoint,
+                         payload=sd_webui_options_payload,)
+            logger.info("Completed switching models")
 
         # Generate images using SD WebUI
         result_images = []
         all_seeds_list = []
-        for request in requests:
-            images_list, seeds_list = get_generated_images(request)
+        for request_list in requests:
+            images_list, seeds_list = get_generated_images(request_list)
             result_images.extend(images_list)
             all_seeds_list.extend(seeds_list)
 
         # Upscale the generated images
         if upscale_payload is not None:
-            upscaled_images = get_upscaled_images(upscale_payload=upscale_payload, result_images=result_images)
+            upscaled_images = get_upscaled_images(
+                upscale_payload=upscale_payload, result_images=result_images)
             result_images = list(filter(None, upscaled_images))
 
         # Resize if required
-        if width is not None and height is not None:     
-            result_images = get_resized_images(images=result_images, resize_width=width, resize_height=height)
+        if width is not None and height is not None:
+            result_images = get_resized_images(
+                images=result_images, resize_width=width, resize_height=height)
 
         # To pass it on save the base64 data to redis keys and update the tracking keys list
         result_images_s3_urls = []
@@ -73,8 +74,9 @@ def sd_webui_post_callback_processor(params):
         # Pass on result images references and seeds for post processing
         callback_payload["result_images"] = result_images_s3_urls
         callback_payload["all_seeds"] = all_seeds_list
-        
-        set_redis_keys_tracking_key(job_id=job_id,redis_keys_list=redis_keys_list)
+
+        set_redis_keys_tracking_key(
+            job_id=job_id, redis_keys_list=redis_keys_list)
 
     except Exception as e:
         callback_payload["result_images"] = None

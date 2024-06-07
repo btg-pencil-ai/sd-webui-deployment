@@ -31,5 +31,9 @@ class Img2ImgPayload:
 class SDLamaCleanerPayload:
     input_image:str
 
+@dataclass
+class SDInterrogatePayload:
+    image: str
+    model: str
+
 SDWebUIPayload = Union[Img2ImgPayload, SDLamaCleanerPayload]
-    
