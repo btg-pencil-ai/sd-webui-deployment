@@ -61,6 +61,12 @@ spec:
         env:
           - name: SD_VERSION
             value: "SD21_UNCLIP"
+          - name: AWS_ACCESS_KEY_ID
+            value: "${AWS_ACCESS_KEY_ID}"
+          - name: AWS_SECRET_ACCESS_KEY
+            value: "${AWS_SECRET_ACCESS_KEY}"
+          - name: AWS_S3_BUCKET
+            value: "${AWS_S3_BUCKET}"
       - name: sd-webui-worker-sd21-unclip
         image: "$DOCKER_REGISTRY/$NAMESPACE/$SERVICE_NAME:$TAG"
         imagePullPolicy: Always
