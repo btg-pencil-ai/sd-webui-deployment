@@ -64,7 +64,7 @@ def post_request(url, payload, timeout=config.SERVER_POST_TIMEOUT):
     return response
 
 
-def get_generated_images(requests, interrogate_prompt=""):
+def get_generated_images(requests):
     """
     For each config, image generation is triggered and returns generated_images base64 data
     """
