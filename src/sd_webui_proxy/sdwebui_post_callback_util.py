@@ -134,7 +134,8 @@ def get_generated_images(requests):
                         (resize_width, resize_height), Image.Resampling.LANCZOS)
                     b64_image = image_to_base64(image)
                     result_images[ind] = b64_image
-        except:
+        except Exception as e:
+            logger.error("Error occurred: %s", str(e))
             result_images = []
             seeds_list = []
     return result_images, seeds_list
