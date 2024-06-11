@@ -27,29 +27,22 @@ def is_controlnet_args_present(payload: SDWebUIPayload):
 
 def replace_image_s3_url_to_base64(payload: SDWebUIPayload):
     """
-    replaces all s3 url redis keys with the corresponding base64 data so as to generate through SD WebUI
+    Replaces all s3 url redis keys with the corresponding base64 data so as to generate through SD WebUI
     """
-    input_image_list = payload.get("init_images", [])
-    if input_image_list is not None and len(input_image_list) > 0:
-        input_image_url = input_image_list[0]
-        input_image_base64 = get_base64_data_from_redis(input_image_url)
-        payload['init_images'] = [input_image_base64]
+    init_images = payload.get("init_images", [])
+    if init_images:
+        payload['init_images'] = [
+            get_base64_data_from_redis(url) for url in init_images]
 
-    input_image_url = payload.get("input_image", None)
-    if (input_image_url is not None and len(input_image_url) > 0):
-        input_image_base64 = get_base64_data_from_redis(input_image_url)
-        payload['input_image'] = input_image_base64
-
-    input_image_mask_url = payload.get("mask", None)
-    if (input_image_mask_url is not None and len(input_image_mask_url) > 0):
-        input_image_mask_base64 = get_base64_data_from_redis(
-            input_image_mask_url)
-        payload['mask'] = input_image_mask_base64
+    for key in ["input_image", "mask"]:
+        url = payload.get(key)
+        if url:
+            payload[key] = get_base64_data_from_redis(url)
 
     if is_controlnet_args_present(payload) is True:
         for cfg in payload['alwayson_scripts']['controlnet']['args']:
             cfg_input_image = cfg.get("input_image")
-            if cfg_input_image is not None and len(cfg_input_image) > 0:
+            if cfg_input_image:
                 cfg["input_image"] = get_base64_data_from_redis(
                     cfg_input_image)
 
@@ -152,7 +145,7 @@ def get_resized_images(images: List, resize_width: int, resize_height: int) -> L
     return resized_images
 
 
-def get_upscaled_images(upscale_payload, result_images=[]):
+def get_upscaled_images(upscale_payload, result_images=None):
     """
     Returns upscaled images
     """
@@ -161,7 +154,7 @@ def get_upscaled_images(upscale_payload, result_images=[]):
     upscaled_images_list = upscale_payload.get("imageList", []) or []
 
     image_list = []
-    if len(result_images) > 0:
+    if result_images and len(result_images) > 0:
         image_list = result_images
     else:
         for image in upscaled_images_list:
@@ -170,8 +163,8 @@ def get_upscaled_images(upscale_payload, result_images=[]):
     assert image_list, "Upscale image list cannot be empty or None"
     upscaled_images_list = asdict(UpscaleBatchImagesListPayload(
         imageList=[
-            asdict((BatchImagesListType(
-                name=f"image_{index}", data=image)))
+            asdict(BatchImagesListType(
+                name=f"image_{index}", data=image))
             for index, image in enumerate(image_list)
         ]
     )
