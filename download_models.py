@@ -20,6 +20,9 @@ ANNOTATOR_MODELS_PATH=os.environ.get("ANNOTATOR_MODELS_PATH",
 EMBEDDINGS_PATH=os.environ.get("EMBEDDINGS_PATH",
                                "/stable-diffusion-webui/embeddings")
 
+CIVIT_AI_MODELS_ENDPOINT = os.environ.get("CIVIT_AI_MODELS_ENDPOINT",
+                                          "https://civitai.com/api/v1/models/")
+
 AWS_ACCESS_KEY_ID=os.environ.get("AWS_ACCESS_KEY_ID",
                                  "dummy-id")
 AWS_SECRET_ACCESS_KEY=os.environ.get("AWS_SECRET_ACCESS_KEY",
@@ -111,11 +114,11 @@ class ModelDownloader():
                     local_dir=model['filepath'],
                     local_dir_use_symlinks=False  # see https://github.com/huggingface/diffusers/issues/2886 
                 )
-                logger.info("%s downloaded successfully", filename)
+                logger.info(f"{filename} downloaded successfully")
             except Exception as e:
-                logger.exception("An unexpected error occurred while downloading %s: %s", filename, e)
+                logger.exception(f"An unexpected error occurred while downloading {filename}: {e}")
         else:
-            logger.info("%s already exists in the local directory, skipping download.", filename)
+            logger.info(f"{filename} already exists in the local directory, skipping download.")
 
     def download_civit_ai_model(self, model):
         filename = model['filename']
@@ -124,10 +127,9 @@ class ModelDownloader():
         # Check if the file already exists in the local directory
         if not os.path.exists(target_path):
             try:
-                models_api_endpoint = "https://civitai.com/api/v1/models/"
                 model_id_match = re.search(r'models/(\d+)', model['model_url'])
                 assert model_id_match, f"Invalid URL format for model ID: {model['model_url']}"
-                endpoint = models_api_endpoint + model_id_match.group(1)
+                endpoint = CIVIT_AI_MODELS_ENDPOINT + model_id_match.group(1)
 
                 # Get model data from Civit AI model api
                 response = requests.get(endpoint, timeout=API_TIMEOUT)
@@ -160,11 +162,11 @@ class ModelDownloader():
                             if chunk:
                                 file.write(chunk)
                                 pbar.update(len(chunk))
-                logger.info("%s downloaded successfully", filename)
+                logger.info(f"{filename} downloaded successfully")
             except Exception as e:
-                logger.exception("An unexpected error occurred while downloading %s: %s", filename, e)
+                logger.exception(f"An unexpected error occurred while downloading {filename}: {e}")
         else:
-            logger.info("%s already exists in the local directory, skipping download.", filename)
+            logger.info(f"{filename} already exists in the local directory, skipping download.")
 
     def download_s3_model(self, model):
         filename = model['s3_key']
@@ -182,10 +184,10 @@ class ModelDownloader():
                 # Download model from S3 bucket
                 self.s3_client.download_file(self.s3_bucket, filename, target_path, Callback=progress_hook)
                 progress_bar.close()
-                logger.info("%s downloaded successfully", filename)
+                logger.info(f"{filename} downloaded successfully")
             except Exception as e:
-                logger.exception("An unexpected error occurred while downloading %s: %s", filename, e)
+                logger.exception(f"An unexpected error occurred while downloading {filename}: {e}")
         else:
-            logger.info("%s already exists in the local directory, skipping download.", filename)
+            logger.info(f"{filename} already exists in the local directory, skipping download.")
 
 cls = ModelDownloader()
