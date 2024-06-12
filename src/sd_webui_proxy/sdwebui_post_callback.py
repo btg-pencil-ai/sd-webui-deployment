@@ -41,7 +41,7 @@ def sd_webui_post_callback_processor(params):
             set_sd_webui_options_full_endpoint = urljoin(
                 config.SD_WEBUI_API_ENDPOINT, config.SET_SD_WEBUI_OPTIONS_ENDPOINT
             )
-            post_request(url=set_sd_webui_options_full_endpoint, payload=sd_webui_options_payload,)
+            post_request(url=set_sd_webui_options_full_endpoint,payload=sd_webui_options_payload,)
             logger.info("Completed switching models")
 
         # Generate images using SD WebUI
@@ -72,7 +72,7 @@ def sd_webui_post_callback_processor(params):
         callback_payload["result_images"] = result_images_s3_urls
         callback_payload["all_seeds"] = all_seeds_list
 
-        set_redis_keys_tracking_key(job_id=job_id, redis_keys_list=redis_keys_list)
+        set_redis_keys_tracking_key(job_id=job_id,redis_keys_list=redis_keys_list)
 
     except Exception as e:
         callback_payload["result_images"] = None

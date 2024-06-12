@@ -127,7 +127,7 @@ def get_generated_images(requests):
                 resize_width, resize_height = resize_payload.get("resize_width"), resize_payload.get("resize_height")
                 for ind,img in enumerate(result_images):
                     image = base64_to_image(img)
-                    image = image.resize((resize_width, resize_height), Image.Resampling.LANCZOS)
+                    image = image.resize((resize_width,resize_height),Image.Resampling.LANCZOS)
                     b64_image = image_to_base64(image)
                     result_images[ind] = b64_image
         except Exception as e:
@@ -147,7 +147,7 @@ def get_resized_images(images:List, resize_width:int, resize_height:int) -> List
     return resized_images
 
 
-def get_upscaled_images(upscale_payload, result_images=None):
+def get_upscaled_images(upscale_payload, result_images=[]):
     """
     Returns upscaled images
     """
@@ -155,7 +155,7 @@ def get_upscaled_images(upscale_payload, result_images=None):
     upscaled_images_list = upscale_payload.get("imageList", []) or []
 
     image_list = []
-    if result_images and len(result_images) > 0:
+    if len(result_images) > 0:
         image_list = result_images
     else:
         for image in upscaled_images_list:
