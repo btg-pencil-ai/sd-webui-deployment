@@ -13,7 +13,7 @@ logger = get_logger()
 session = get_session(config.SERVER_POST_RETRIES, config.SERVER_POST_BACKOFF)
 
 
-def is_controlnet_args_present(payload: SDWebUIPayload):
+def is_controlnet_args_present(payload:SDWebUIPayload):
     """
     Checks and returns whether there are controlnet arguments present in a config or not
     """
@@ -36,12 +36,12 @@ def replace_image_s3_url_to_base64(payload: SDWebUIPayload):
         payload['init_images'] = [input_image_base64]
 
     input_image_url = payload.get("input_image", None)
-    if (input_image_url is not None and len(input_image_url)>0):
+    if(input_image_url is not None and len(input_image_url)>0):
         input_image_base64 = get_base64_data_from_redis(input_image_url)
         payload['input_image'] = input_image_base64
 
     input_image_mask_url = payload.get("mask", None)
-    if (input_image_mask_url is not None and len(input_image_mask_url)>0):
+    if(input_image_mask_url is not None and len(input_image_mask_url)>0):
         input_image_mask_base64 = get_base64_data_from_redis(input_image_mask_url)
         payload['mask'] = input_image_mask_base64
 
@@ -77,7 +77,7 @@ def get_generated_images(requests):
         payload:SDWebUIPayload = request.get("payload", None)
         assert payload,"payload cannot be None"
 
-        resize_payload = payload.get("resize_payload", None)
+        resize_payload = payload.get("resize_payload",None)
         no_of_samples = payload.get("batch_size", None)
 
         replace_image_s3_url_to_base64(payload)
@@ -125,10 +125,9 @@ def get_generated_images(requests):
             # If resize is required before inputing the output of one pipeline to the next pipeline
             if resize_payload is not None:
                 resize_width, resize_height = resize_payload.get("resize_width"), resize_payload.get("resize_height")
-                for ind, img in enumerate(result_images):
+                for ind,img in enumerate(result_images):
                     image = base64_to_image(img)
-                    image = image.resize(
-                        (resize_width, resize_height), Image.Resampling.LANCZOS)
+                    image = image.resize((resize_width, resize_height), Image.Resampling.LANCZOS)
                     b64_image = image_to_base64(image)
                     result_images[ind] = b64_image
         except Exception as e:
@@ -138,7 +137,7 @@ def get_generated_images(requests):
     return result_images, seeds_list
 
 
-def get_resized_images(images: List, resize_width: int, resize_height: int) -> List:
+def get_resized_images(images:List, resize_width:int, resize_height:int) -> List:
     resized_images = []
     for img in images:
         decoded_image = base64_to_image(img)
@@ -152,8 +151,7 @@ def get_upscaled_images(upscale_payload, result_images=None):
     """
     Returns upscaled images
     """
-    upscale_full_endpoint = urljoin(
-        config.SD_WEBUI_API_ENDPOINT, config.BATCH_UPSCALE_ENDPOINT)
+    upscale_full_endpoint = urljoin(config.SD_WEBUI_API_ENDPOINT, config.BATCH_UPSCALE_ENDPOINT)
     upscaled_images_list = upscale_payload.get("imageList", []) or []
 
     image_list = []
@@ -166,12 +164,11 @@ def get_upscaled_images(upscale_payload, result_images=None):
     assert image_list, "Upscale image list cannot be empty or None"
     upscaled_images_list = asdict(UpscaleBatchImagesListPayload(
                 imageList=[
-                    asdict(BatchImagesListType(
-                        name=f"image_{index}", data=image))
+                    asdict(BatchImagesListType(name=f"image_{index}", data=image))
                     for index, image in enumerate(image_list)
                 ]
             )
-    )
+        )
     upscale_payload.update(upscaled_images_list)
 
     upscale_response = post_request(url=upscale_full_endpoint, payload=upscale_payload,)
