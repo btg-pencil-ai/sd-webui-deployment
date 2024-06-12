@@ -21,7 +21,7 @@ def is_controlnet_args_present(payload: SDWebUIPayload):
         payload.get('alwayson_scripts') is not None
         and payload.get('alwayson_scripts').get('controlnet') is not None
         and payload.get('alwayson_scripts').get('controlnet').get('args') is not None
-        and len(payload.get('alwayson_scripts').get('controlnet').get('args', [])) > 0
+        and len(payload.get('alwayson_scripts').get('controlnet').get('args',[])) > 0
     )
 
 
@@ -29,29 +29,27 @@ def replace_image_s3_url_to_base64(payload: SDWebUIPayload):
     """
     Replaces all s3 url redis keys with the corresponding base64 data so as to generate through SD WebUI
     """
-    input_image_list = payload.get("init_images", [])
-    if input_image_list is not None and len(input_image_list) > 0:
+    input_image_list = payload.get("init_images",[])
+    if input_image_list is not None and len(input_image_list)>0:
         input_image_url = input_image_list[0]
         input_image_base64 = get_base64_data_from_redis(input_image_url)
         payload['init_images'] = [input_image_base64]
 
     input_image_url = payload.get("input_image", None)
-    if (input_image_url is not None and len(input_image_url) > 0):
+    if (input_image_url is not None and len(input_image_url)>0):
         input_image_base64 = get_base64_data_from_redis(input_image_url)
         payload['input_image'] = input_image_base64
 
     input_image_mask_url = payload.get("mask", None)
-    if (input_image_mask_url is not None and len(input_image_mask_url) > 0):
-        input_image_mask_base64 = get_base64_data_from_redis(
-            input_image_mask_url)
+    if (input_image_mask_url is not None and len(input_image_mask_url)>0):
+        input_image_mask_base64 = get_base64_data_from_redis(input_image_mask_url)
         payload['mask'] = input_image_mask_base64
 
     if is_controlnet_args_present(payload) is True:
         for cfg in payload['alwayson_scripts']['controlnet']['args']:
             cfg_input_image = cfg.get("input_image")
-            if cfg_input_image is not None and len(cfg_input_image) > 0:
-                cfg["input_image"] = get_base64_data_from_redis(
-                    cfg_input_image)
+            if cfg_input_image is not None and len(cfg_input_image)>0:
+                cfg["input_image"] = get_base64_data_from_redis(cfg_input_image)
 
 
 def post_request(url, payload, timeout=config.SERVER_POST_TIMEOUT):
@@ -72,12 +70,12 @@ def get_generated_images(requests):
     seeds_list = []
     for request in requests:
         endpoint = request.get("endpoint", None)
-        assert endpoint, "endpoint cannot be None"
+        assert endpoint,"endpoint cannot be None"
 
         full_endpoint = urljoin(config.SD_WEBUI_API_ENDPOINT, endpoint)
 
-        payload: SDWebUIPayload = request.get("payload", None)
-        assert payload, "payload cannot be None"
+        payload:SDWebUIPayload = request.get("payload", None)
+        assert payload,"payload cannot be None"
 
         resize_payload = payload.get("resize_payload", None)
         no_of_samples = payload.get("batch_size", None)
@@ -126,8 +124,7 @@ def get_generated_images(requests):
 
             # If resize is required before inputing the output of one pipeline to the next pipeline
             if resize_payload is not None:
-                resize_width, resize_height = resize_payload.get(
-                    "resize_width"), resize_payload.get("resize_height")
+                resize_width, resize_height = resize_payload.get("resize_width"), resize_payload.get("resize_height")
                 for ind, img in enumerate(result_images):
                     image = base64_to_image(img)
                     image = image.resize(
@@ -145,8 +142,7 @@ def get_resized_images(images: List, resize_width: int, resize_height: int) -> L
     resized_images = []
     for img in images:
         decoded_image = base64_to_image(img)
-        final_image = decoded_image.resize(
-            (resize_width, resize_height), Image.LANCZOS)
+        final_image = decoded_image.resize((resize_width, resize_height), Image.LANCZOS)
         final_image_encoded = image_to_base64(final_image)
         resized_images.append(final_image_encoded)
     return resized_images
@@ -169,17 +165,16 @@ def get_upscaled_images(upscale_payload, result_images=None):
 
     assert image_list, "Upscale image list cannot be empty or None"
     upscaled_images_list = asdict(UpscaleBatchImagesListPayload(
-        imageList=[
-            asdict(BatchImagesListType(
-                name=f"image_{index}", data=image))
-            for index, image in enumerate(image_list)
-        ]
-    )
+                imageList=[
+                    asdict(BatchImagesListType(
+                        name=f"image_{index}", data=image))
+                    for index, image in enumerate(image_list)
+                ]
+            )
     )
     upscale_payload.update(upscaled_images_list)
 
-    upscale_response = post_request(
-        url=upscale_full_endpoint, payload=upscale_payload,)
+    upscale_response = post_request(url=upscale_full_endpoint, payload=upscale_payload,)
 
     upscale_response_json = upscale_response.json()
     upscaled_images = upscale_response_json.get("images", [])
