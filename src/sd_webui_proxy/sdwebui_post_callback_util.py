@@ -1,16 +1,17 @@
 from dataclasses import asdict
 import json
-from typing import List, Union
+from typing import List
 from PIL import Image
 from urllib.parse import urljoin
 
 import src.config as config
 from src.common.logger import get_logger
-from src.sd_webui_proxy.type import SDWebUIPayload, UpscaleBatchImagesListPayload, BatchImagesListType
+from src.sd_webui_proxy.type import SDWebUIPayload, SDInterrogatePayload, UpscaleBatchImagesListPayload, BatchImagesListType
 from src.sd_webui_proxy.util import base64_to_image, image_to_base64, get_session, get_base64_data_from_redis
 
 logger = get_logger()
 session = get_session(config.SERVER_POST_RETRIES, config.SERVER_POST_BACKOFF)
+
 
 def is_controlnet_args_present(payload:SDWebUIPayload):
     """
@@ -23,16 +24,17 @@ def is_controlnet_args_present(payload:SDWebUIPayload):
         and len(payload.get('alwayson_scripts').get('controlnet').get('args',[])) > 0
     )
 
-def replace_image_s3_url_to_base64(payload:SDWebUIPayload):
+
+def replace_image_s3_url_to_base64(payload: SDWebUIPayload):
     """
-    replaces all s3 url redis keys with the corresponding base64 data so as to generate through SD WebUI
+    Replaces all s3 url redis keys with the corresponding base64 data so as to generate through SD WebUI
     """
     input_image_list = payload.get("init_images",[])
     if input_image_list is not None and len(input_image_list)>0:
         input_image_url = input_image_list[0]
         input_image_base64 = get_base64_data_from_redis(input_image_url)
         payload['init_images'] = [input_image_base64]
-    
+
     input_image_url = payload.get("input_image", None)
     if(input_image_url is not None and len(input_image_url)>0):
         input_image_base64 = get_base64_data_from_redis(input_image_url)
@@ -42,12 +44,13 @@ def replace_image_s3_url_to_base64(payload:SDWebUIPayload):
     if(input_image_mask_url is not None and len(input_image_mask_url)>0):
         input_image_mask_base64 = get_base64_data_from_redis(input_image_mask_url)
         payload['mask'] = input_image_mask_base64
-    
+
     if is_controlnet_args_present(payload) is True:
         for cfg in payload['alwayson_scripts']['controlnet']['args']:
             cfg_input_image = cfg.get("input_image")
-            if  cfg_input_image is not None and len(cfg_input_image)>0:
+            if cfg_input_image is not None and len(cfg_input_image)>0:
                 cfg["input_image"] = get_base64_data_from_redis(cfg_input_image)
+
 
 def post_request(url, payload, timeout=config.SERVER_POST_TIMEOUT):
     """
@@ -57,6 +60,7 @@ def post_request(url, payload, timeout=config.SERVER_POST_TIMEOUT):
     response = session.post(url=url, json=payload, timeout=timeout)
     response.raise_for_status()
     return response
+
 
 def get_generated_images(requests):
     """
@@ -78,16 +82,33 @@ def get_generated_images(requests):
 
         replace_image_s3_url_to_base64(payload)
 
+        interrogate_model = request.get("interrogate_model", None)
+        if interrogate_model:
+            interrogate_endpoint = urljoin(
+                config.SD_WEBUI_API_ENDPOINT, config.SD_WEBUI_INTERROGATE_ENDPOINT)
+
+            interrogate_payload = asdict(SDInterrogatePayload(
+                image=payload.get('init_images')[0],
+                model=interrogate_model
+            ))
+
+            interrogate_response = post_request(
+                url=interrogate_endpoint, payload=interrogate_payload)
+            interrogate_prompt = interrogate_response.json()['caption']
+
+            prompt = payload.get('prompt', "")
+            payload['prompt'] = f"{interrogate_prompt} {prompt}"
+
         if len(result_images) > 0:
             result_image_selected = result_images[0]
 
             if "init_images" in payload:
                 payload["init_images"] = [result_image_selected]
-            
+
             if is_controlnet_args_present(payload) is True:
                 for cfg in payload['alwayson_scripts']['controlnet']['args']:
                     cfg["input_image"] = result_image_selected
-                
+
         response = post_request(url=full_endpoint, payload=payload)
         try:
             response_json = response.json()
@@ -109,10 +130,12 @@ def get_generated_images(requests):
                     image = image.resize((resize_width,resize_height),Image.Resampling.LANCZOS)
                     b64_image = image_to_base64(image)
                     result_images[ind] = b64_image
-        except:
+        except Exception as e:
+            logger.error(f"Error occurred: {e}")
             result_images = []
             seeds_list = []
     return result_images, seeds_list
+
 
 def get_resized_images(images:List, resize_width:int, resize_height:int) -> List:
     resized_images = []
@@ -122,6 +145,7 @@ def get_resized_images(images:List, resize_width:int, resize_height:int) -> List
         final_image_encoded = image_to_base64(final_image)
         resized_images.append(final_image_encoded)
     return resized_images
+
 
 def get_upscaled_images(upscale_payload, result_images=[]):
     """
@@ -136,20 +160,20 @@ def get_upscaled_images(upscale_payload, result_images=[]):
     else:
         for image in upscaled_images_list:
             image_list.append(get_base64_data_from_redis(image))
-    
+
     assert image_list, "Upscale image list cannot be empty or None"
     upscaled_images_list = asdict(UpscaleBatchImagesListPayload(
                 imageList=[
-                    asdict((BatchImagesListType(name=f"image_{index}", data=image)))
+                    asdict(BatchImagesListType(name=f"image_{index}", data=image))
                     for index, image in enumerate(image_list)
                 ]
             )
         )
     upscale_payload.update(upscaled_images_list)
-            
+
     upscale_response = post_request(url=upscale_full_endpoint,payload=upscale_payload,)
 
     upscale_response_json = upscale_response.json()
     upscaled_images = upscale_response_json.get("images", [])
-    
+
     return upscaled_images
