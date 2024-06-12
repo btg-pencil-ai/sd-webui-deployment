@@ -1,4 +1,4 @@
-FROM  louistrypencil/stable-diffusion-webui:nvidia-cuda-12.2.0-runtime-ubuntu22.04-v3
+FROM  amaltrypencil/stable-diffusion-webui:nvidia-cuda-12.2.0-runtime-ubuntu22.04-v4
 
 ENV HF_HOME "/hf-home"
 ENV CONDA_DIR /opt/conda
