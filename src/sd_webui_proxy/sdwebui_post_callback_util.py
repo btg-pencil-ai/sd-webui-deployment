@@ -171,7 +171,7 @@ def get_upscaled_images(upscale_payload, result_images=None):
         )
     upscale_payload.update(upscaled_images_list)
 
-    upscale_response = post_request(url=upscale_full_endpoint, payload=upscale_payload,)
+    upscale_response = post_request(url=upscale_full_endpoint,payload=upscale_payload,)
 
     upscale_response_json = upscale_response.json()
     upscaled_images = upscale_response_json.get("images", [])
