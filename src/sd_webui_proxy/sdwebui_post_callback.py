@@ -41,28 +41,25 @@ def sd_webui_post_callback_processor(params):
             set_sd_webui_options_full_endpoint = urljoin(
                 config.SD_WEBUI_API_ENDPOINT, config.SET_SD_WEBUI_OPTIONS_ENDPOINT
             )
-            post_request(url=set_sd_webui_options_full_endpoint,
-                         payload=sd_webui_options_payload,)
+            post_request(url=set_sd_webui_options_full_endpoint, payload=sd_webui_options_payload,)
             logger.info("Completed switching models")
 
         # Generate images using SD WebUI
         result_images = []
         all_seeds_list = []
-        for request_list in requests:
-            images_list, seeds_list = get_generated_images(request_list)
+        for request in requests:
+            images_list, seeds_list = get_generated_images(request)
             result_images.extend(images_list)
             all_seeds_list.extend(seeds_list)
 
         # Upscale the generated images
         if upscale_payload is not None:
-            upscaled_images = get_upscaled_images(
-                upscale_payload=upscale_payload, result_images=result_images)
+            upscaled_images = get_upscaled_images(upscale_payload=upscale_payload, result_images=result_images)
             result_images = list(filter(None, upscaled_images))
 
         # Resize if required
         if width is not None and height is not None:
-            result_images = get_resized_images(
-                images=result_images, resize_width=width, resize_height=height)
+            result_images = get_resized_images(images=result_images, resize_width=width, resize_height=height)
 
         # To pass it on save the base64 data to redis keys and update the tracking keys list
         result_images_s3_urls = []
@@ -75,8 +72,7 @@ def sd_webui_post_callback_processor(params):
         callback_payload["result_images"] = result_images_s3_urls
         callback_payload["all_seeds"] = all_seeds_list
 
-        set_redis_keys_tracking_key(
-            job_id=job_id, redis_keys_list=redis_keys_list)
+        set_redis_keys_tracking_key(job_id=job_id, redis_keys_list=redis_keys_list)
 
     except Exception as e:
         callback_payload["result_images"] = None
