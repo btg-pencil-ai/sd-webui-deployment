@@ -10,6 +10,9 @@ services:
       - /mnt/data/docker/sd-webui-codeformer-models:/stable-diffusion-webui/repositories/CodeFormer/weights
     environment:
       SD_VERSION: "SD15"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
     network_mode: "host"
     deploy:
       resources:

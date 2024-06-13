@@ -21,6 +21,7 @@ DELAY_EXCHANGE_NAME = os.environ.get('DELAY_EXCHANGE_NAME')
 SD_WEBUI_API_ENDPOINT = os.environ.get("SD_WEBUI_API_ENDPOINT", "http://localhost:7860")
 BATCH_UPSCALE_ENDPOINT = "sdapi/v1/extra-batch-images/"
 SET_SD_WEBUI_OPTIONS_ENDPOINT = "sdapi/v1/options/"
+SD_WEBUI_INTERROGATE_ENDPOINT = "sdapi/v1/interrogate/"
 
 # Be very aggressive on this so we don't waste time
 SERVER_CHECK_INITIAL_DELAY=1
