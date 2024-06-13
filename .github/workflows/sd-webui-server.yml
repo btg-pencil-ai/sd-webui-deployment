@@ -192,18 +192,6 @@ jobs:
           tags: |
             asia-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
             europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-
-      - name: Build and push to GAR latest
-        uses: docker/build-push-action@v5.3.0
-        if: ${{ env.ENV == 'stg' }}
-        with:
-          context: .
-          file: Dockerfile
-          push: true
-          no-cache: true
-          platforms: linux/amd64
-          provenance: false
-          tags: |
             europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE_LATEST }}
   
       - name: Build and push to GAR
