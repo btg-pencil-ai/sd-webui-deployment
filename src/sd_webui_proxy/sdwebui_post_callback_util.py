@@ -45,9 +45,9 @@ def replace_image_s3_url_to_base64(payload:SDWebUIPayload):
     
     if is_controlnet_args_present(payload) is True:
         for cfg in payload['alwayson_scripts']['controlnet']['args']:
-            cfg_input_image = cfg.get("input_image")
+            cfg_input_image = cfg.get("image")
             if  cfg_input_image is not None and len(cfg_input_image)>0:
-                cfg["input_image"] = get_base64_data_from_redis(cfg_input_image)
+                cfg["image"] = get_base64_data_from_redis(cfg_input_image)
 
 def post_request(url, payload, timeout=config.SERVER_POST_TIMEOUT):
     """

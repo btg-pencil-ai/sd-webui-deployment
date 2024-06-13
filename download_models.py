@@ -47,6 +47,7 @@ class HuggingFaceModelDownloader():
             {'repo_id': 'lllyasviel/sd_control_collection', 'filename': 'ip-adapter_sd15.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'TencentARC/T2I-Adapter', 'filename': 'models_XL/adapter-xl-sketch.pth', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
             {'repo_id': 'stabilityai/stable-diffusion-2-1-unclip', 'filename': 'sd21-unclip-h.ckpt', 'filepath': STABLE_DIFFUSION_MODELS_PATH},
+            {'repo_id': 'h94/IP-Adapter', 'filename': 'sdxl_models/ip-adapter-plus_sdxl_vit-h.safetensors', 'filepath': CONTROLNET_EXTENSION_MODELS_PATH},
         ]
         
         for model in models_to_download:
