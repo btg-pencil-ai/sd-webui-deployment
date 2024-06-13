@@ -95,7 +95,7 @@ jobs:
   build-push-image:
     name: Build and Push Image
     runs-on: ${{ (inputs.RUNNER) || '2nd-Large-Runner' }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     permissions:
       id-token: write
       pull-requests: write
