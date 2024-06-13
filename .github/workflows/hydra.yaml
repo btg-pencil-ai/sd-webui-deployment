@@ -38,7 +38,17 @@ jobs:
   
       - id: variable
         if: steps.check_label.outputs.label
-        uses: btg-pencil-ai/kube-deployment/workflows/composite/prepare-env-hydra@main
+        name: Set environment variables
+        shell: bash
+        run: |
+          echo "SERVICE_ACCOUNT=STG_SERVICE_ACCOUNT" >> $GITHUB_OUTPUT
+          echo "OIDC_PROVIDER=STG_OIDC_PROVIDER" >> $GITHUB_OUTPUT
+          echo "GAR_REPOSITORY=pencil-hydra-container-registry" >> $GITHUB_OUTPUT
+          echo "ENV=hydra" >> $GITHUB_OUTPUT
+          echo "SLACK_WEBHOOK_URL=STG_SLACK_WEBHOOK_URL" >> $GITHUB_OUTPUT
+          
+          echo ":rocket: Environment --> $ENV" >> $GITHUB_STEP_SUMMARY
+          echo ":seedling: Branch --> ${GITHUB_REF#refs/heads/}" >> $GITHUB_STEP_SUMMARY
 
   build-push-image:
     name: Build and Push Image
