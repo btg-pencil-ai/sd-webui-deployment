@@ -1,29 +1,11 @@
-name: Build and Push to GARs
+name: Build and Push to Hydra GARs
 
 on:
-  workflow_dispatch:
-    inputs:
-      Environment:
-        required: true
-        type: choice
-        description: Choose env
-        options:
-          - stg
-          - prd
-          - hydra
-      RUNNER:
-        type: choice
-        default: "2nd-Large-Runner"
-        description: Choose Runner for the Workflow
-        options:
-        - "self-hosted-runner"
-        - "ubuntu-latest"
-        - "2nd-Large-Runner"
-  push:
+  pull_request:
+    types:
+      - labeled
     branches:
       - development
-      - main
-      - release-pro
 
 env:
   SERVICE_NAMES: sd-webui-server
@@ -41,60 +23,27 @@ jobs:
       GAR_REPOSITORY: ${{ steps.variable.outputs.GAR_REPOSITORY }}
       ENV: ${{ steps.variable.outputs.ENV }}
       SLACK_WEBHOOK_URL: ${{ steps.variable.outputs.SLACK_WEBHOOK_URL }}
+      LABEL: ${{ steps.check_label.outputs.LABEL }}
 
     steps:
-      - id: variable
-        name: Set environment variables
-        shell: bash
+      - name: Check label prefix
+        id: check_label
         run: |
-          BRANCH="${GITHUB_REF#refs/heads/}"
-          ENV="${{ github.event.inputs.environment }}"
-          echo "Branch: $BRANCH"
-
-          if [ -z "$ENV" ]; then
-          case $BRANCH in
-            "dev" | "development" | "preprod")
-              ENV="stg"
-              ;;
-            INFRA*)
-              ENV="hydra"
-              ;;
-            "main" | "release-pro")
-              ENV="prd"
-              ;;
-            *)
-              echo "Environment not configured for this branch!" && exit 1
-              ;;
-          esac
+          label="${{ github.event.pull_request.labels[0].name }}"
+          if [[ "$label" != epic-* ]]; then
+            echo "Label does not start with 'epic-', skipping job."
+            exit 0  
           fi
-
-          if [[ $ENV == 'prd' && $BRANCH == 'main' ]]; then
-            echo "SERVICE_ACCOUNT=${ENV}_SERVICE_ACCOUNT" >> $GITHUB_OUTPUT
-            echo "OIDC_PROVIDER=${ENV}_OIDC_PROVIDER" >> $GITHUB_OUTPUT
-            echo "GAR_REPOSITORY=pencil-app-container-registry" >> $GITHUB_OUTPUT
-          elif [[ $ENV == 'prd' || $BRANCH == 'release-pro' ]]; then
-            echo "SERVICE_ACCOUNT=${ENV}_SERVICE_ACCOUNT" >> $GITHUB_OUTPUT
-            echo "OIDC_PROVIDER=${ENV}_OIDC_PROVIDER" >> $GITHUB_OUTPUT
-            echo "GAR_REPOSITORY=pencil-pro-container-registry" >> $GITHUB_OUTPUT      
-          elif [[ $ENV == 'stg' || $ENV == 'hydra' ]]; then
-            echo "SERVICE_ACCOUNT=${ENV}_SERVICE_ACCOUNT" >> $GITHUB_OUTPUT
-            echo "OIDC_PROVIDER=${ENV}_OIDC_PROVIDER" >> $GITHUB_OUTPUT
-            echo "GAR_REPOSITORY=pencil-${ENV}-container-registry" >> $GITHUB_OUTPUT
-          else
-            echo "Branch not configured!"
-            exit 1
-          fi
-
-          echo "ENV=$ENV" >> $GITHUB_OUTPUT
-          echo "SLACK_WEBHOOK_URL=${ENV}_SLACK_WEBHOOK_URL" >> $GITHUB_OUTPUT
-
-          
-          echo ":rocket: Environment --> $ENV" >> $GITHUB_STEP_SUMMARY
-          echo ":seedling: Branch --> ${GITHUB_REF#refs/heads/}" >> $GITHUB_STEP_SUMMARY
+          echo "::set-output name=LABEL::$label"
+  
+      - id: variable
+        if: steps.check_label.outputs.label
+        uses: btg-pencil-ai/kube-deployment/workflows/composite/prepare-env-hydra@main
 
   build-push-image:
     name: Build and Push Image
-    runs-on: ${{ (inputs.RUNNER) || '2nd-Large-Runner' }}
+    if: needs.prepare-env.outputs.label
+    runs-on: '2nd-Large-Runner'
     timeout-minutes: 20
     permissions:
       id-token: write
@@ -106,19 +55,9 @@ jobs:
       OIDC_PROVIDER: ${{ needs.prepare-env.outputs.OIDC_PROVIDER }}
       ENV: ${{ needs.prepare-env.outputs.ENV }}
       GAR_REPOSITORY: ${{ needs.prepare-env.outputs.GAR_REPOSITORY }}
+      LABEL: ${{ needs.prepare-env.outputs.LABEL }}
 
     steps:
-      # - name: check avaible size
-      #   id: check-size-before
-      #   shell: bash
-      #   run: |
-      #     df -h
-      # - name: Maximize build space
-      #   uses: easimon/maximize-build-space@master
-      #   with:
-      #     root-reserve-mb: 512
-      #     swap-size-mb: 1024
-      #     remove-dotnet: 'true'
       - name: check avaible size
         id: check-size-after
         shell: bash
@@ -146,21 +85,7 @@ jobs:
           token_format: "access_token"
           workload_identity_provider: ${{ vars[env.OIDC_PROVIDER] }}
           service_account: ${{ vars[env.SERVICE_ACCOUNT] }}
-  
-      - name: Login to Artifact Registry ASIA
-        uses: docker/login-action@v3.1.0
-        with:
-          registry: "asia-docker.pkg.dev"
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
-  
-      - name: Login to Artifact Registry US
-        uses: docker/login-action@v3.1.0
-        with:
-          registry: "us-docker.pkg.dev"
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
-  
+
       - name: Login to Artifact Registry Europe
         uses: docker/login-action@v3.1.0
         with:
@@ -173,15 +98,13 @@ jobs:
         id: get-image
         run: |
   
-          IMAGE_TAG=$GITHUB_RUN_NUMBER-${GITHUB_SHA::10}
+          IMAGE_TAG=${{ env.LABEL }}
   
           echo "IMAGE=${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "IMAGE_LATEST=${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:latest" >> $GITHUB_OUTPUT
           echo ":sunny: Image -->  ${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:$IMAGE_TAG" >> $GITHUB_STEP_SUMMARY
   
       - name: Build and push to GAR
         uses: docker/build-push-action@v5.3.0
-        if: ${{ env.ENV == 'stg' }}
         with:
           context: .
           file: Dockerfile
@@ -190,25 +113,8 @@ jobs:
           platforms: linux/amd64
           provenance: false
           tags: |
-            asia-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
             europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-            europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE_LATEST }}
   
-      - name: Build and push to GAR
-        uses: docker/build-push-action@v5.3.0
-        if: ${{ env.ENV == 'prd' }}
-        with:
-          context: .
-          file: Dockerfile
-          push: true
-          no-cache: true
-          platforms: linux/amd64
-          tags: |
-            asia-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-            us-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-            europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-
-
 ### slack alert
 
   slack-notification:
