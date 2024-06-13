@@ -44,7 +44,7 @@ jobs:
     name: Build and Push Image
     if: needs.prepare-env.outputs.label
     runs-on: '2nd-Large-Runner'
-    timeout-minutes: 20
+    timeout-minutes: 40
     permissions:
       id-token: write
       pull-requests: write
