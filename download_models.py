@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 STABLE_DIFFUSION_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Stable-diffusion")
 VAE_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "VAE")
 LORA_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Lora")
+SWINIR_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "SwinIR")
 
 API_TIMEOUT = 300
 
@@ -50,6 +51,7 @@ class ModelDownloader():
         os.makedirs(STABLE_DIFFUSION_MODELS_PATH, exist_ok=True)
         os.makedirs(VAE_MODELS_PATH, exist_ok=True)
         os.makedirs(LORA_MODELS_PATH, exist_ok=True)
+        os.makedirs(SWINIR_MODELS_PATH, exist_ok=True)
 
         hugging_face_models_to_download = [
             {'repo_id': 'stabilityai/stable-diffusion-xl-base-1.0', 'filename': 'sd_xl_base_1.0.safetensors', 'filepath': STABLE_DIFFUSION_MODELS_PATH},
@@ -83,6 +85,7 @@ class ModelDownloader():
 
         s3_models_to_download = [
             {'s3_key': 'SDXLrender_v2.0.safetensors', 'filepath': LORA_MODELS_PATH},
+            {'s3_key': 'SwinIR_4x.pth', 'filepath': SWINIR_MODELS_PATH},
         ]
 
         self.s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
