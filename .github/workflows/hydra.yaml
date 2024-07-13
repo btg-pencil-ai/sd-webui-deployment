@@ -1,0 +1,226 @@
+name: Build and Push to Hydra GARs
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - "epic-*"
+      - "EPIC-*"
+
+env:
+  SERVICE_NAMES: sd-webui-server
+
+
+  
+jobs:
+  prepare-env:
+    name: Prepare Env
+    runs-on: ${{ (inputs.RUNNER) || 'ubuntu-latest' }}
+    timeout-minutes: 2
+    outputs:
+      SERVICE_ACCOUNT: ${{ steps.variable.outputs.SERVICE_ACCOUNT }}
+      OIDC_PROVIDER: ${{ steps.variable.outputs.OIDC_PROVIDER }}
+      GAR_REPOSITORY: ${{ steps.variable.outputs.GAR_REPOSITORY }}
+      ENV: ${{ steps.variable.outputs.ENV }}
+      SLACK_WEBHOOK_URL: ${{ steps.variable.outputs.SLACK_WEBHOOK_URL }}
+      PR_NUM: ${{ steps.check_pr.outputs.PR_NUM }}
+
+    steps:
+      - name: Check Branch & PR Number
+        id: check_pr
+        run: |
+          pull_request_number="${{ github.event.pull_request.number }}"
+          if [[ "$GITHUB_BASE_REF" != epic-* && "$GITHUB_BASE_REF" != EPIC-* ]]; then
+            echo "Branch does not start with 'epic-' or 'EPIC-', skipping job."
+            exit 0
+          fi
+          echo "::set-output name=PR_NUM::$pull_request_number"
+  
+      - id: variable
+        if: steps.check_pr.outputs.PR_NUM
+        name: Set environment variables
+        shell: bash
+        run: |
+          echo "SERVICE_ACCOUNT=STG_SERVICE_ACCOUNT" >> $GITHUB_OUTPUT
+          echo "OIDC_PROVIDER=STG_OIDC_PROVIDER" >> $GITHUB_OUTPUT
+          echo "GAR_REPOSITORY=pencil-hydra-container-registry" >> $GITHUB_OUTPUT
+          echo "ENV=hydra" >> $GITHUB_OUTPUT
+          echo "SLACK_WEBHOOK_URL=STG_SLACK_WEBHOOK_URL" >> $GITHUB_OUTPUT
+          echo ":rocket: Environment --> $ENV" >> $GITHUB_STEP_SUMMARY
+          echo ":seedling: Branch --> ${GITHUB_REF#refs/heads/}" >> $GITHUB_STEP_SUMMARY
+
+  build-push-image:
+    name: Build and Push Image
+    if: needs.prepare-env.outputs.PR_NUM && github.event.pull_request.merged == true
+    runs-on: '2nd-Large-Runner'
+    timeout-minutes: 40
+    permissions:
+      id-token: write
+      pull-requests: write
+      contents: read
+    needs: prepare-env
+    env:
+      SERVICE_ACCOUNT: ${{ needs.prepare-env.outputs.SERVICE_ACCOUNT }}
+      OIDC_PROVIDER: ${{ needs.prepare-env.outputs.OIDC_PROVIDER }}
+      ENV: ${{ needs.prepare-env.outputs.ENV }}
+      GAR_REPOSITORY: ${{ needs.prepare-env.outputs.GAR_REPOSITORY }}
+      PR_NUM: ${{ needs.prepare-env.outputs.PR_NUM }}
+
+    steps:
+      - name: check avaible size
+        id: check-size-after
+        shell: bash
+        run: |
+          df -h
+
+      - uses: "actions/checkout@v4"
+
+      - name: Set up Docker Context for Buildx
+        id: buildx-context
+        shell: bash
+        run: |
+          docker context create builders
+  
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          endpoint: builders
+          driver: docker
+  
+      - uses: "google-github-actions/auth@v2"
+        id: auth
+        with:
+          token_format: "access_token"
+          workload_identity_provider: ${{ vars[env.OIDC_PROVIDER] }}
+          service_account: ${{ vars[env.SERVICE_ACCOUNT] }}
+
+      - name: Login to Artifact Registry Europe
+        uses: docker/login-action@v3.1.0
+        with:
+          registry: "europe-docker.pkg.dev"
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+  
+      - name: Get tag
+        shell: bash
+        id: get-image
+        run: |
+          IMAGE_TAG=${{ env.PR_NUM}}
+  
+          echo "IMAGE=${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo ":sunny: Image -->  ${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:$IMAGE_TAG" >> $GITHUB_STEP_SUMMARY 
+  
+      - name: Build and push to GAR
+        uses: docker/build-push-action@v5.3.0
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          no-cache: true
+          platforms: linux/amd64
+          provenance: false
+          tags: |
+            europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
+  
+  generate-hydra-helm-values:
+    name: Generate and Push Hydra Helm Values
+    if: needs.prepare-env.outputs.PR_NUM && github.event.pull_request.merged == true
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 10
+    permissions:
+      id-token: write
+      pull-requests: write
+      contents: write
+    needs:
+      - prepare-env
+      - build-push-image
+    env:
+      IMAGE_TAG: ${{ needs.prepare-env.outputs.PR_NUM }}
+      INFRA_REPO: "kube-deployment"
+      HYDRA_BRANCH: "main"
+      HYDRA_VALUES_FILE: "hydra-values.yaml"
+
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.PENCIL_ACTION_APPID }}
+          private-key: ${{ secrets.PENCIL_ACTION_APP_PRIVATE_KEY }}
+          repositories: ${{ env.INFRA_REPO}},${{ github.event.pull_request.head.repo.name }}
+
+      - name: Checkout Infra Repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          repository: "${{ github.repository_owner }}/${{ env.INFRA_REPO}}"
+          ref: ${{ env.HYDRA_BRANCH}}
+          fetch-depth: "0"
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install Python dependencies
+        run: |
+          pip install pyyaml
+        shell: bash
+
+      - name: Create/Update PR for Hydra
+        id: hydra_pr
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          HYDRA_VALUES_PATH: "./${{ env.HYDRA_VALUES_FILE}}"
+          UPDATE_TAG_SCRIPT_PATH: "scripts/update_hydra_values.py"
+          NAME_FORMATTER_SCRIPT: "scripts/name_formatter.py"
+        shell: bash
+        run: |
+
+          # Fetch all remote branches
+          git fetch
+          SERVICE_TARGET_BRANCH=${{ github.base_ref }}
+
+          TARGET_BRANCH=`python ${{ env.NAME_FORMATTER_SCRIPT }} $SERVICE_TARGET_BRANCH`
+
+          # Check if the target branch exists on the remote
+          #git ls-remote --heads origin $TARGET_BRANCH give empty o/p if remote is absent
+          if [ -n "$(git ls-remote --heads origin $TARGET_BRANCH)" ]; then
+            echo "Switching to existing branch $TARGET_BRANCH"
+            git switch $TARGET_BRANCH
+            echo "Pulling from remote"
+            git pull origin $TARGET_BRANCH
+          else
+            echo "Branch $TARGET_BRANCH does not exist. Creating a new branch."
+            git checkout -b $TARGET_BRANCH
+          fi
+
+          #git user configured as github bot
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          #run script to update values file & commits the values file
+          python ${{ env.UPDATE_TAG_SCRIPT_PATH }}
+
+          git add ${{ env.HYDRA_VALUES_FILE }} 
+
+          #commited by bot and authored by PR merger & pushed to the kube repos epic branch
+          git commit --author="${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>" -m "Updated by workflow run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          git push origin $TARGET_BRANCH
+
+          #Create PR if its not already Open Else Update PR Body
+          is_pr_open=`gh pr list --base ${{ env.HYDRA_BRANCH }} --head $TARGET_BRANCH --json state --jq '.[0].state'`  
+          merged_pr_url=${{ github.event.pull_request.html_url }}
+          merged_pr_title=$(gh pr view $merged_pr_url --json title --jq '.title')   
+          if [ -z "$is_pr_open" ]; then
+            echo "Creating PR"
+            gh pr create --draft --base ${{ env.HYDRA_BRANCH }} --head $TARGET_BRANCH --title ':frog:[HYDRA] -> (${{ github.base_ref }})' --body "- [$merged_pr_title]($merged_pr_url)"
+          else
+            hydra_pr=$(gh pr list --base ${{ env.HYDRA_BRANCH }} --head $TARGET_BRANCH --json url --jq '.[0].url')
+            gh pr view $hydra_pr --json body --jq '.body' > pr_body.txt
+            echo "- [$merged_pr_title]($merged_pr_url)" >> pr_body.txt
+            gh pr edit $hydra_pr --body-file pr_body.txt
+          fi
+          hydra_pr=$(gh pr list --base ${{ env.HYDRA_BRANCH }} --head $TARGET_BRANCH --json url --jq '.[0].url')
+          echo "HYDRA_PR_URL=$hydra_pr" >> $GITHUB_OUTPUT
+          echo ":electron: Hydra PR -->  $hydra_pr" >> $GITHUB_STEP_SUMMARY
