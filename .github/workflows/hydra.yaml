@@ -50,7 +50,7 @@ jobs:
           echo "OIDC_PROVIDER=STG_OIDC_PROVIDER" >> $GITHUB_OUTPUT
           echo "GAR_REPOSITORY=pencil-hydra-container-registry" >> $GITHUB_OUTPUT
           echo "ENV=hydra" >> $GITHUB_OUTPUT
-          echo "SLACK_WEBHOOK_URL=STG_SLACK_WEBHOOK_URL" >> $GITHUB_OUTPUT
+          echo "SLACK_WEBHOOK_URL=HYDRA_SLACK_WEBHOOK_URL" >> $GITHUB_OUTPUT
           echo ":rocket: Environment --> $ENV" >> $GITHUB_STEP_SUMMARY
           echo ":seedling: Branch --> ${GITHUB_REF#refs/heads/}" >> $GITHUB_STEP_SUMMARY
 
@@ -229,3 +229,45 @@ jobs:
           hydra_pr=$(gh pr list --base ${{ env.HYDRA_BRANCH }} --head $TARGET_BRANCH --json url --jq '.[0].url')
           echo "HYDRA_PR_URL=$hydra_pr" >> $GITHUB_OUTPUT
           echo ":electron: Hydra PR -->  $hydra_pr" >> $GITHUB_STEP_SUMMARY
+
+
+  ### slack alert
+
+  slack-notification:
+    name: Slack Notification
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    runs-on: ${{ (inputs.RUNNER) || 'ubuntu-latest' }}
+    needs:
+      - prepare-env
+      - build-push-image
+      - generate-hydra-helm-values
+    env:
+     SLACK_WEBHOOK_URL: ${{needs.prepare-env.outputs.SLACK_WEBHOOK_URL}}
+
+    steps:
+      - uses: technote-space/workflow-conclusion-action@v3.0.3
+      - name: Update slack message body 
+        shell: bash
+        id: body
+        run: |
+          if [ '${{ env.WORKFLOW_CONCLUSION }}' == 'success' ]
+          then
+            echo "SLACK_MESSAGE=Success ✅" >> $GITHUB_OUTPUT
+          elif [ '${{ env.WORKFLOW_CONCLUSION }}'  == 'failure' ]
+          then
+            echo "SLACK_MESSAGE=Failed ❌" >> $GITHUB_OUTPUT
+          elif [ '${{ env.WORKFLOW_CONCLUSION }}'  == 'cancelled' ]
+          then
+            echo "SLACK_MESSAGE=Cancelled ⚠️" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_COLOR: ${{ env.WORKFLOW_CONCLUSION }} # or a specific color like 'good' or '#ff00ff'
+          SLACK_ICON: https://res.cloudinary.com/apideck/image/upload/w_196,f_auto/v1612401946/marketplaces/ckhg56iu1mkpc0b66vj7fsj3o/listings/k3l4ibtdajnvjqoclysf.png
+          SLACK_MESSAGE: ${{ steps.body.outputs.SLACK_MESSAGE }}
+          SLACK_TITLE: Build Status
+          SLACK_FOOTER: '<${{ github.server_url }}/${{ github.repository }}|${{ github.repository }}>'
+          SLACK_USERNAME: Pencil-CI
+          SLACK_WEBHOOK: ${{ vars[env.SLACK_WEBHOOK_URL] }}          
