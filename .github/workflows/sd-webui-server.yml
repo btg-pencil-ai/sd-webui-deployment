@@ -94,120 +94,120 @@ jobs:
           echo ":rocket: Environment --> $ENV" >> $GITHUB_STEP_SUMMARY
           echo ":seedling: Branch --> ${GITHUB_REF#refs/heads/}" >> $GITHUB_STEP_SUMMARY
 
-  # build-push-image:
-  #   name: Build and Push Image
-  #   runs-on: ${{ (inputs.RUNNER) || '2nd-Large-Runner' }}
-  #   timeout-minutes: 40
-  #   permissions:
-  #     id-token: write
-  #     pull-requests: write
-  #     contents: read
-  #   needs: prepare-env
-  #   env:
-  #     SERVICE_ACCOUNT: ${{ needs.prepare-env.outputs.SERVICE_ACCOUNT }}
-  #     OIDC_PROVIDER: ${{ needs.prepare-env.outputs.OIDC_PROVIDER }}
-  #     ENV: ${{ needs.prepare-env.outputs.ENV }}
-  #     GAR_REPOSITORY: ${{ needs.prepare-env.outputs.GAR_REPOSITORY }}
+  build-push-image:
+    name: Build and Push Image
+    runs-on: ${{ (inputs.RUNNER) || '2nd-Large-Runner' }}
+    timeout-minutes: 40
+    permissions:
+      id-token: write
+      pull-requests: write
+      contents: read
+    needs: prepare-env
+    env:
+      SERVICE_ACCOUNT: ${{ needs.prepare-env.outputs.SERVICE_ACCOUNT }}
+      OIDC_PROVIDER: ${{ needs.prepare-env.outputs.OIDC_PROVIDER }}
+      ENV: ${{ needs.prepare-env.outputs.ENV }}
+      GAR_REPOSITORY: ${{ needs.prepare-env.outputs.GAR_REPOSITORY }}
 
-  #   steps:
-  #     # - name: check avaible size
-  #     #   id: check-size-before
-  #     #   shell: bash
-  #     #   run: |
-  #     #     df -h
-  #     # - name: Maximize build space
-  #     #   uses: easimon/maximize-build-space@master
-  #     #   with:
-  #     #     root-reserve-mb: 512
-  #     #     swap-size-mb: 1024
-  #     #     remove-dotnet: 'true'
-  #     - name: check avaible size
-  #       id: check-size-after
-  #       shell: bash
-  #       run: |
-  #         df -h
+    steps:
+      # - name: check avaible size
+      #   id: check-size-before
+      #   shell: bash
+      #   run: |
+      #     df -h
+      # - name: Maximize build space
+      #   uses: easimon/maximize-build-space@master
+      #   with:
+      #     root-reserve-mb: 512
+      #     swap-size-mb: 1024
+      #     remove-dotnet: 'true'
+      - name: check avaible size
+        id: check-size-after
+        shell: bash
+        run: |
+          df -h
 
-  #     - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v4"
 
-  #     - name: Set up Docker Context for Buildx
-  #       id: buildx-context
-  #       shell: bash
-  #       run: |
-  #         docker context create builders
+      - name: Set up Docker Context for Buildx
+        id: buildx-context
+        shell: bash
+        run: |
+          docker context create builders
 
-  #     - name: Set up Docker Buildx
-  #       id: buildx
-  #       uses: docker/setup-buildx-action@v3
-  #       with:
-  #         endpoint: builders
-  #         driver: docker
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          endpoint: builders
+          driver: docker
 
-  #     - uses: "google-github-actions/auth@v2"
-  #       id: auth
-  #       with:
-  #         token_format: "access_token"
-  #         workload_identity_provider: ${{ vars[env.OIDC_PROVIDER] }}
-  #         service_account: ${{ vars[env.SERVICE_ACCOUNT] }}
+      - uses: "google-github-actions/auth@v2"
+        id: auth
+        with:
+          token_format: "access_token"
+          workload_identity_provider: ${{ vars[env.OIDC_PROVIDER] }}
+          service_account: ${{ vars[env.SERVICE_ACCOUNT] }}
 
-  #     - name: Login to Artifact Registry ASIA
-  #       uses: docker/login-action@v3.1.0
-  #       with:
-  #         registry: "asia-docker.pkg.dev"
-  #         username: oauth2accesstoken
-  #         password: ${{ steps.auth.outputs.access_token }}
+      - name: Login to Artifact Registry ASIA
+        uses: docker/login-action@v3.1.0
+        with:
+          registry: "asia-docker.pkg.dev"
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
-  #     - name: Login to Artifact Registry US
-  #       uses: docker/login-action@v3.1.0
-  #       with:
-  #         registry: "us-docker.pkg.dev"
-  #         username: oauth2accesstoken
-  #         password: ${{ steps.auth.outputs.access_token }}
+      - name: Login to Artifact Registry US
+        uses: docker/login-action@v3.1.0
+        with:
+          registry: "us-docker.pkg.dev"
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
-  #     - name: Login to Artifact Registry Europe
-  #       uses: docker/login-action@v3.1.0
-  #       with:
-  #         registry: "europe-docker.pkg.dev"
-  #         username: oauth2accesstoken
-  #         password: ${{ steps.auth.outputs.access_token }}
+      - name: Login to Artifact Registry Europe
+        uses: docker/login-action@v3.1.0
+        with:
+          registry: "europe-docker.pkg.dev"
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
-  #     - name: Get tag
-  #       shell: bash
-  #       id: get-image
-  #       run: |
-  #         IMAGE_TAG=$GITHUB_RUN_NUMBER-${GITHUB_SHA::10}
+      - name: Get tag
+        shell: bash
+        id: get-image
+        run: |
+          IMAGE_TAG=$GITHUB_RUN_NUMBER-${GITHUB_SHA::10}
 
-  #         echo "IMAGE=${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:$IMAGE_TAG" >> $GITHUB_OUTPUT
-  #         echo "IMAGE_LATEST=${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:latest" >> $GITHUB_OUTPUT
-  #         echo ":sunny: Image -->  ${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:$IMAGE_TAG" >> $GITHUB_STEP_SUMMARY
+          echo "IMAGE=${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "IMAGE_LATEST=${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:latest" >> $GITHUB_OUTPUT
+          echo ":sunny: Image -->  ${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:$IMAGE_TAG" >> $GITHUB_STEP_SUMMARY
 
-  #     - name: Build and push to GAR
-  #       uses: docker/build-push-action@v5.3.0
-  #       if: ${{ env.ENV == 'stg' }}
-  #       with:
-  #         context: .
-  #         file: Dockerfile
-  #         push: true
-  #         no-cache: true
-  #         platforms: linux/amd64
-  #         provenance: false
-  #         tags: |
-  #           asia-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-  #           europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-  #           europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE_LATEST }}
+      - name: Build and push to GAR
+        uses: docker/build-push-action@v5.3.0
+        if: ${{ env.ENV == 'stg' }}
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          no-cache: true
+          platforms: linux/amd64
+          provenance: false
+          tags: |
+            asia-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
+            europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
+            europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE_LATEST }}
 
-  #     - name: Build and push to GAR
-  #       uses: docker/build-push-action@v5.3.0
-  #       if: ${{ env.ENV == 'prd' }}
-  #       with:
-  #         context: .
-  #         file: Dockerfile
-  #         push: true
-  #         no-cache: true
-  #         platforms: linux/amd64
-  #         tags: |
-  #           asia-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-  #           us-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-  #           europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
+      - name: Build and push to GAR
+        uses: docker/build-push-action@v5.3.0
+        if: ${{ env.ENV == 'prd' }}
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          no-cache: true
+          platforms: linux/amd64
+          tags: |
+            asia-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
+            us-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
+            europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
 
   restart-hydra-deployments:
     name: Restart Hydra Deployments
@@ -219,7 +219,7 @@ jobs:
       contents: read
     needs:
       - prepare-env
-      # - build-push-image
+      - build-push-image
     env:
       SERVICE_ACCOUNT: ${{ needs.prepare-env.outputs.SERVICE_ACCOUNT }}
       OIDC_PROVIDER: ${{ needs.prepare-env.outputs.OIDC_PROVIDER }}
@@ -279,7 +279,7 @@ jobs:
     runs-on: ${{ (inputs.RUNNER) || 'ubuntu-latest' }}
     needs:
       - prepare-env
-      # - build-push-image
+      - build-push-image
       - restart-hydra-deployments
     env:
       SLACK_WEBHOOK_URL: ${{needs.prepare-env.outputs.SLACK_WEBHOOK_URL}}
