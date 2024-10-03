@@ -57,7 +57,7 @@ jobs:
   build-push-image:
     name: Build and Push Image
     if: needs.prepare-env.outputs.PR_NUM && github.event.pull_request.merged == true
-    runs-on: '2nd-Large-Runner'
+    runs-on: 'blacksmith-4vcpu-ubuntu-2204'
     timeout-minutes: 40
     permissions:
       id-token: write
@@ -131,7 +131,7 @@ jobs:
   generate-hydra-helm-values:
     name: Generate and Push Hydra Helm Values
     if: needs.prepare-env.outputs.PR_NUM && github.event.pull_request.merged == true
-    runs-on: 'ubuntu-latest'
+    runs-on: 'blacksmith-2vcpu-ubuntu-2204'
     timeout-minutes: 10
     permissions:
       id-token: write
@@ -163,7 +163,7 @@ jobs:
           fetch-depth: "0"
 
       - name: Install Python
-        uses: actions/setup-python@v5
+        uses: useblacksmith/setup-python@v6
         with:
           python-version: "3.9"
 
