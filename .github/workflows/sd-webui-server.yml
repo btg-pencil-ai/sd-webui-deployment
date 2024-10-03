@@ -211,7 +211,7 @@ jobs:
 
   restart-hydra-deployments:
     name: Restart Hydra Deployments
-    runs-on: ${{ (inputs.RUNNER) || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.RUNNER) || 'blacksmith-2vcpu-ubuntu-2204' }}
     timeout-minutes: 20
     if: needs.prepare-env.outputs.ENV == 'stg'
     permissions:
