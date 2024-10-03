@@ -13,12 +13,12 @@ on:
           - hydra
       RUNNER:
         type: choice
-        default: "2nd-Large-Runner"
+        default: "blacksmith-4vcpu-ubuntu-2204"
         description: Choose Runner for the Workflow
         options:
           - "self-hosted-runner"
           - "ubuntu-latest"
-          - "2nd-Large-Runner"
+          - "blacksmith-4vcpu-ubuntu-2204"
   push:
     branches:
       - development
@@ -96,7 +96,7 @@ jobs:
 
   build-push-image:
     name: Build and Push Image
-    runs-on: ${{ (inputs.RUNNER) || '2nd-Large-Runner' }}
+    runs-on: ${{ (inputs.RUNNER) || 'blacksmith-4vcpu-ubuntu-2204' }}
     timeout-minutes: 40
     permissions:
       id-token: write

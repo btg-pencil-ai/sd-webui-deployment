@@ -57,7 +57,7 @@ jobs:
   build-push-image:
     name: Build and Push Image
     if: needs.prepare-env.outputs.PR_NUM && github.event.pull_request.merged == true
-    runs-on: '2nd-Large-Runner'
+    runs-on: 'blacksmith-4vcpu-ubuntu-2204'
     timeout-minutes: 40
     permissions:
       id-token: write
