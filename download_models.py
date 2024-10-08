@@ -9,13 +9,15 @@ logger = logging.getLogger(__name__)
 
 MAIN_MODELS_PATH = os.environ.get(
     "MAIN_MODELS_PATH", "/stable-diffusion-webui/models")
-CONTROLNET_EXTENSION_MODELS_PATH = os.environ.get(
-    "CONTROLNET_EXTENSION_MODELS_PATH", "/stable-diffusion-webui/models/ControlNet")
+CONTROLNET_EXTENSION_PATH = os.environ.get(
+    "CONTROLNET_EXTENSION_PATH", "/stable-diffusion-webui/extensions/sd-webui-controlnet")
 EMBEDDINGS_PATH = os.environ.get(
     "EMBEDDINGS_PATH", "/stable-diffusion-webui/embeddings")
 
 STABLE_DIFFUSION_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Stable-diffusion")
 VAE_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "VAE")
+CONTROLNET_MODELS_PATH = os.path.join(CONTROLNET_EXTENSION_PATH, "models")
+CONTROLNET_ANNOTATORS_PATH = os.path.join(CONTROLNET_EXTENSION_PATH, "annotator/downloads/clip_vision")
 ESRGAN_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "ESRGAN")
 REALESRGAN_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "RealESRGAN")
 CODEFORMER_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Codeformer")
@@ -32,7 +34,9 @@ class ModelDownloader():
 
         os.makedirs(MAIN_MODELS_PATH, exist_ok=True)
         os.makedirs(VAE_MODELS_PATH, exist_ok=True)
-        os.makedirs(CONTROLNET_EXTENSION_MODELS_PATH, exist_ok=True)
+        os.makedirs(CONTROLNET_EXTENSION_PATH, exist_ok=True)
+        os.makedirs(CONTROLNET_MODELS_PATH, exist_ok=True)
+        os.makedirs(CONTROLNET_ANNOTATORS_PATH, exist_ok=True)
         os.makedirs(EMBEDDINGS_PATH, exist_ok=True)
         os.makedirs(STABLE_DIFFUSION_MODELS_PATH, exist_ok=True)
         os.makedirs(ESRGAN_MODELS_PATH, exist_ok=True)
@@ -101,22 +105,27 @@ models_to_download = [
     {
         'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/control_v11p_sd15_canny.pth',
         'filename': 'control_v11p_sd15_canny.pth',
-        'filepath': CONTROLNET_EXTENSION_MODELS_PATH
+        'filepath': CONTROLNET_MODELS_PATH
     },
     {
         'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/control_v11f1e_sd15_tile.pth',
         'filename': 'control_v11f1e_sd15_tile.pth',
-        'filepath': CONTROLNET_EXTENSION_MODELS_PATH
+        'filepath': CONTROLNET_MODELS_PATH
     },
     {
         'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/diffusers_xl_canny_full.safetensors',
         'filename': 'diffusers_xl_canny_full.safetensors',
-        'filepath': CONTROLNET_EXTENSION_MODELS_PATH
+        'filepath': CONTROLNET_MODELS_PATH
     },
     {
         'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/ip-adapter-plus_sdxl_vit-h.safetensors',
         'filename': 'ip-adapter-plus_sdxl_vit-h.safetensors',
-        'filepath': CONTROLNET_EXTENSION_MODELS_PATH
+        'filepath': CONTROLNET_MODELS_PATH
+    },
+    {
+        'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/clip_h.pth',
+        'filename': 'clip_h.pth',
+        'filepath': CONTROLNET_ANNOTATORS_PATH
     },
     {
         'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/ESRGAN_4x.pth',
