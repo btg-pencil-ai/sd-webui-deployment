@@ -36,6 +36,7 @@ STABLE_DIFFUSION_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Stable-diffusion"
 VAE_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "VAE")
 LORA_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Lora")
 SWINIR_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "SwinIR")
+ESRGAN_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "ESRGAN")
 
 API_TIMEOUT = 300
 
@@ -89,6 +90,10 @@ class ModelDownloader():
             {'s3_key': 'SwinIR_4x.pth', 'filepath': SWINIR_MODELS_PATH},
         ]
 
+        models_to_download_from_url = [
+            {'url': 'https://huggingface.co/datasets/jibopabo/upscalers/resolve/main/4xNomosUniDAT_otf.pth', 'filename': '4xNomosUniDAT_otf.pth', 'filepath': ESRGAN_MODELS_PATH},
+        ]
+
         self.s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
         self.s3_bucket = AWS_S3_BUCKET
 
@@ -103,6 +108,10 @@ class ModelDownloader():
         logger.info("Starting download of S3 models")
         for model in s3_models_to_download:
             self.download_s3_model(model)
+
+        logger.info("Starting download of models from URL")
+        for model in models_to_download_from_url:
+            self.download_model_from_url(model)
 
     def download_hugging_face_model(self, model):
         repo_id = model['repo_id']
@@ -191,6 +200,34 @@ class ModelDownloader():
                 logger.info(f"{filename} downloaded successfully")
             except Exception as e:
                 logger.exception(f"An unexpected error occurred while downloading {filename}: {e}")
+        else:
+            logger.info(f"{filename} already exists in the local directory, skipping download.")
+
+    def download_model_from_url(self, model):
+        filename = model.get('filename')
+        url = model.get('url')
+        target_path = os.path.join(model.get('filepath'), filename)
+
+        # Check if the file already exists in the local directory
+        if not os.path.exists(target_path):
+            try:
+                response = requests.head(url, timeout=API_TIMEOUT)
+                response.raise_for_status()
+                file_size = int(response.headers.get('content-length', 0))
+
+                with requests.get(url, stream=True, timeout=API_TIMEOUT) as r:
+                    r.raise_for_status()
+                    with open(target_path, 'wb') as file, tqdm(total=file_size, unit='B', unit_scale=True, desc=filename) as progress_bar:
+                        for chunk in r.iter_content(chunk_size=8192):
+                            if chunk:
+                                file.write(chunk)
+                                progress_bar.update(len(chunk))
+
+                logger.info(f"{filename} downloaded successfully")
+
+            except requests.RequestException as e:
+                logger.exception(f"An error occurred while downloading {filename}: {e}")
+
         else:
             logger.info(f"{filename} already exists in the local directory, skipping download.")
 

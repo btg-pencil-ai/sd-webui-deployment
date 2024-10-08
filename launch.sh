@@ -15,6 +15,8 @@ mkdir -p ${HF_HOME}
 # Please check if sdwebui already has functions to auto-download models if not present, if they do then we don't need to do it
 python3 download_models.py
 
+git clone https://github.com/ljleb/sd-webui-freeu.git /stable-diffusion-webui/extensions/sd-webui-freeu
+
 # Run and listen to port in API mode
 cd /stable-diffusion-webui
 
