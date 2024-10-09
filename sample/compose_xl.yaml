@@ -4,10 +4,11 @@ services:
     command: /bin/bash -c "./launch.sh"
     tty: true
     volumes:
-      - /mnt/data/docker/sd-webui-hf-home:/hf-home
-      - /mnt/data/docker/sd-webui-models:/stable-diffusion-webui/models
-      - /mnt/data/docker/sd-webui-controlnet-models:/stable-diffusion-webui/extensions/sd-webui-controlnet/models
-      - /mnt/data/docker/sd-webui-codeformer-models:/stable-diffusion-webui/repositories/CodeFormer/weights
+      - /mnt/mydisk/docker/sd-webui-hf-home:/hf-home
+      - /mnt/mydisk/docker/sd-webui-models:/stable-diffusion-webui/models
+      - /mnt/mydisk/docker/sd-webui-embeddings:/stable-diffusion-webui/embeddings
+      - /mnt/mydisk/docker/sd-webui-controlnet-models:/stable-diffusion-webui/extensions/sd-webui-controlnet/models
+      - /mnt/mydisk/docker/sd-webui-codeformer-models:/stable-diffusion-webui/repositories/CodeFormer/weights
     environment:
       SD_VERSION: "SDXL"
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}

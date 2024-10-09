@@ -42,6 +42,9 @@ spec:
             mountPath: /stable-diffusion-webui/models/
             subPath: sd-webui-models
           - name: sd-webui-pv
+            mountPath: /stable-diffusion-webui/embeddings/
+            subPath: sd-webui-embeddings
+          - name: sd-webui-pv
             mountPath: /stable-diffusion-webui/extensions/sd-webui-controlnet/models
             subPath: sd-webui-controlnet-models
           - name: sd-webui-pv
@@ -61,12 +64,6 @@ spec:
         env:
           - name: SD_VERSION
             value: "SDXL"
-          - name: AWS_ACCESS_KEY_ID
-            value: "${AWS_ACCESS_KEY_ID}"
-          - name: AWS_SECRET_ACCESS_KEY
-            value: "${AWS_SECRET_ACCESS_KEY}"
-          - name: AWS_S3_BUCKET
-            value: "${AWS_S3_BUCKET}"
       - name: sd-webui-worker-sdxl
         image: "$DOCKER_REGISTRY/$NAMESPACE/$SERVICE_NAME:$TAG"
         imagePullPolicy: Always
