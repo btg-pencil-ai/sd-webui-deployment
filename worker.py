@@ -19,25 +19,15 @@ logger = get_logger(__name__)
 message_processor = None
 worker_name = None
 worker_info = {
-    'sd_webui_worker_sd15': {
+    'sd_webui_worker_sd15_juggernaut_reborn': {
         'message_processor': sd_webui_post_callback_processor,
-        'queue': os.environ.get('SD_WEBUI_WORKER_QUEUE', "sd_webui_sd15_queue"),
-        'routing_key': os.environ.get('SD15_WEBUI_WORKER_ROUTING_KEY', "*.sd15_webui.worker")
+        'queue': os.environ.get('SD_WEBUI_WORKER_QUEUE', "sd_webui_sd15_juggernaut_reborn_queue"),
+        'routing_key': os.environ.get('SD15_WEBUI_WORKER_ROUTING_KEY', "*.sd15_juggernaut_reborn_webui.worker")
     },
     'sd_webui_worker_sdxl': {
         'message_processor': sd_webui_post_callback_processor,
         'queue': os.environ.get('SD_WEBUI_WORKER_QUEUE', "sd_webui_sdxl_queue"),
         'routing_key': os.environ.get('SDXL_WEBUI_WORKER_ROUTING_KEY', "*.sdxl_webui.worker")
-    },
-    'sd_webui_worker_sd15_inpaint': {
-        'message_processor': sd_webui_post_callback_processor,
-        'queue': os.environ.get('SD_INPAINT_WEBUI_WORKER_QUEUE', "sd_webui_sd15_inpaint_queue"),
-        'routing_key': os.environ.get('SD15_INPAINT_WEBUI_WORKER_ROUTING_KEY', "*.sd15_inpaint_webui.worker")
-    },
-    'sd_webui_worker_sd21_unclip': {
-        'message_processor': sd_webui_post_callback_processor,
-        'queue': os.environ.get('SD_UNCLIP_WEBUI_WORKER_QUEUE', "sd_webui_sd21_unclip_queue"),
-        'routing_key': os.environ.get('SD21_UNCLIP_WEBUI_WORKER_ROUTING_KEY', "*.sd21_unclip_webui.worker")
     }
 }
 

@@ -18,28 +18,15 @@ python3 download_models.py
 # Run and listen to port in API mode
 cd /stable-diffusion-webui
 
-if [ ${SD_VERSION} == "SD15" ]; then
-    # Append flags for 'SD15'
-    LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/v1-5-pruned-emaonly.safetensors \
-        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt \
-        --medvram"
-
-elif [ ${SD_VERSION} == "SD15_INPAINT" ]; then
+if [ ${SD_VERSION} == "SD15_JUGGERNAUT_REBORN" ]; then
     # Append flags for other cases
-    LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/sd-v1-5-inpainting.ckpt \
-        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt \
-        --medvram"
+    LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/juggernaut-reborn.safetensors \
+        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt"
 
 elif [ ${SD_VERSION} == "SDXL" ]; then
     # Append flags for other cases
     LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/sd_xl_base_1.0.safetensors \
-        --vae-path ${MAIN_MODELS_PATH}/VAE/sdxl_vae.safetensors \
-        --medvram"
-
-elif [ ${SD_VERSION} == "SD21_UNCLIP" ]; then
-    # Append flags for other cases
-    LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/sd21-unclip-h.ckpt \
-        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt"
+        --vae-path ${MAIN_MODELS_PATH}/VAE/sdxl_vae.safetensors"
 
 else
     echo "Invalid SD_VERSION ${SD_VERSION}"
