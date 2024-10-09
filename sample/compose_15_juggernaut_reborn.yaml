@@ -4,15 +4,13 @@ services:
     command: /bin/bash -c "./launch.sh"
     tty: true
     volumes:
-      - /mnt/data/docker/sd-webui-hf-home:/hf-home
-      - /mnt/data/docker/sd-webui-models:/stable-diffusion-webui/models
-      - /mnt/data/docker/sd-webui-controlnet-models:/stable-diffusion-webui/extensions/sd-webui-controlnet/models
-      - /mnt/data/docker/sd-webui-codeformer-models:/stable-diffusion-webui/repositories/CodeFormer/weights
+      - /mnt/mydisk/docker/sd-webui-hf-home:/hf-home
+      - /mnt/mydisk/docker/sd-webui-models:/stable-diffusion-webui/models
+      - /mnt/mydisk/docker/sd-webui-embeddings:/stable-diffusion-webui/embeddings
+      - /mnt/mydisk/docker/sd-webui-controlnet-models:/stable-diffusion-webui/extensions/sd-webui-controlnet/models
+      - /mnt/mydisk/docker/sd-webui-codeformer-models:/stable-diffusion-webui/repositories/CodeFormer/weights
     environment:
-      SD_VERSION: "SD15"
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      SD_VERSION: "SD15_JUGGERNAUT_REBORN"
     network_mode: "host"
     deploy:
       resources:
