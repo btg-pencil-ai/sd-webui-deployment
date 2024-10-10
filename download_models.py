@@ -36,7 +36,7 @@ STABLE_DIFFUSION_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Stable-diffusion"
 VAE_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "VAE")
 LORA_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Lora")
 SWINIR_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "SwinIR")
-ESRGAN_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "ESRGAN")
+DAT_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "DAT")
 
 API_TIMEOUT = 300
 
@@ -53,6 +53,7 @@ class ModelDownloader():
         os.makedirs(VAE_MODELS_PATH, exist_ok=True)
         os.makedirs(LORA_MODELS_PATH, exist_ok=True)
         os.makedirs(SWINIR_MODELS_PATH, exist_ok=True)
+        os.makedirs(DAT_MODELS_PATH, exist_ok=True)
 
         hugging_face_models_to_download = [
             {'repo_id': 'stabilityai/stable-diffusion-xl-base-1.0', 'filename': 'sd_xl_base_1.0.safetensors', 'filepath': STABLE_DIFFUSION_MODELS_PATH},
@@ -91,7 +92,7 @@ class ModelDownloader():
         ]
 
         models_to_download_from_url = [
-            {'url': 'https://huggingface.co/datasets/jibopabo/upscalers/resolve/main/4xNomosUniDAT_otf.pth', 'filename': '4xNomosUniDAT_otf.pth', 'filepath': ESRGAN_MODELS_PATH},
+            {'url': 'https://huggingface.co/datasets/jibopabo/upscalers/resolve/main/4xNomosUniDAT_otf.pth', 'filename': '4xNomosUniDAT_otf.pth', 'filepath': DAT_MODELS_PATH},
         ]
 
         self.s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
