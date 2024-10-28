@@ -33,22 +33,22 @@ def sanitize_params_v2(params, hide_jwt=True, hide_list=False):
     # Recursively clean up dict (e.g. callback params etc.)
     sanitized_params = {}
     for k, v in params.items():
-        if isinstance(v, dict):
-            sanitized_params[k] = sanitize_params_v2(
-                v, hide_jwt=hide_jwt, hide_list=hide_list)
-
-        elif isinstance(v, str) and len(v) > 64:
-            sanitized_params[k] = f"{v[:64]}..truncated for print.."
-            
-        elif k in ['queue_consumer', 'basic_deliver']:
+        if k in ['queue_consumer', 'basic_deliver']:
             continue
 
         elif hide_jwt is True and 'jwt' in k:
             continue
-        
+
         elif hide_list is True and isinstance(v, list):
             sanitized_params[k] = f'List with {len(v)} items'
-            
+
+        elif isinstance(v, str) and len(v) > 64:
+            sanitized_params[k] = f"{v[:64]}..truncated for print.."
+
+        elif isinstance(v, dict):
+            sanitized_params[k] = sanitize_params_v2(
+                v, hide_jwt=hide_jwt, hide_list=hide_list)
+
         else:
             sanitized_params[k] = v
 
