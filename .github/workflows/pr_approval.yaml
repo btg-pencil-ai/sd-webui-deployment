@@ -1,0 +1,15 @@
+name: Check  QA Team Approvals
+
+on:
+  pull_request_review:
+    types:
+      - submitted
+      - edited
+      - dismissed
+
+jobs:
+  check-qa-team-approval:
+    uses: btg-pencil-ai/kube-deployment/.github/workflows/reusable-check-approvals.yaml@main
+    secrets:
+      GITHUB_APP_ID: ${{ vars.ADMIN_GITHUB_APP_ID }}
+      GITHUB_APP_PRIVATE_KEY: ${{ secrets.ADMIN_GITHUB_APP_PRIVATE_KEY }}
