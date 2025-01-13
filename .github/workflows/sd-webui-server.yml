@@ -22,8 +22,6 @@ on:
   push:
     branches:
       - development
-      - main
-      - release-pro
 
 env:
   SERVICE_NAMES: sd-webui-server
