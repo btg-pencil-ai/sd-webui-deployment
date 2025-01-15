@@ -1,0 +1,64 @@
+name: Production Release sd-webui-server
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release version like v1.0.0"
+        required: true
+        type: string
+      environment:
+        description: "Environment (APP/PRO)"
+        required: true
+        type: choice
+        default: "APP"
+        options:
+          - PRO
+          - APP
+
+env:
+  WORKLOAD_NAME: sd-webui-server
+  BUILD_RUNNER: "blacksmith-4vcpu-ubuntu-2204"
+  # DOCKERFILE_CONTEXT_PATH: .    ## Optional
+  # DOCKERFILE_PATH: ./Dockerfile
+  # DOCKER_BUILDARGS: |
+  #   --build-arg NODE_ENV=production
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.inputs.environment }}
+  cancel-in-progress: true
+
+jobs:
+  get-env:
+    name: Get Environment Variables  ## due to this limitation https://github.com/actions/runner/issues/2372
+    runs-on: ubuntu-latest  
+    outputs:
+      WORKLOAD_NAME: ${{ steps.get-env.outputs.WORKLOAD_NAME }}
+      DOCKERFILE_CONTEXT_PATH: ${{ steps.get-env.outputs.DOCKERFILE_CONTEXT_PATH }}
+      DOCKERFILE_PATH: ${{ steps.get-env.outputs.DOCKERFILE_PATH }}
+      DOCKER_BUILDARGS: ${{ steps.get-env.outputs.DOCKER_BUILDARGS }}
+      BUILD_RUNNER: ${{ steps.get-env.outputs.BUILD_RUNNER }}
+    steps:
+      - name: Get Environment Variables
+        id: get-env
+        run: |
+          echo "WORKLOAD_NAME=${{ env.WORKLOAD_NAME }}" >> $GITHUB_OUTPUT
+          echo "DOCKERFILE_CONTEXT_PATH=${{ env.DOCKERFILE_CONTEXT_PATH }}" >> $GITHUB_OUTPUT
+          echo "DOCKERFILE_PATH=${{ env.DOCKERFILE_PATH }}" >> $GITHUB_OUTPUT
+          echo "DOCKER_BUILDARGS=${{ env.DOCKER_BUILDARGS }}" >> $GITHUB_OUTPUT
+          echo "BUILD_RUNNER=${{ env.BUILD_RUNNER }}" >> $GITHUB_OUTPUT
+
+  prod-release:
+    name: Production Release
+    uses: btg-pencil-ai/kube-deployment/.github/workflows/reusable-prod-release.yaml@main
+    needs: get-env
+    secrets: inherit
+    with:
+      release-version: ${{ github.event.inputs.release_version }}
+      environment: ${{ github.event.inputs.environment }}
+      build-runner: ${{ needs.get-env.outputs.BUILD_RUNNER }}
+      workload-name: ${{ needs.get-env.outputs.WORKLOAD_NAME }}
+      dockerfile-context-path: ${{ needs.get-env.outputs.DOCKERFILE_CONTEXT_PATH }}
+      dockerfile-path: ${{ needs.get-env.outputs.DOCKERFILE_PATH }}
+      docker-buildargs: ${{ needs.get-env.outputs.DOCKER_BUILDARGS }}
