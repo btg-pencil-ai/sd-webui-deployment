@@ -11,8 +11,6 @@ MAIN_MODELS_PATH = os.environ.get(
     "MAIN_MODELS_PATH", "/stable-diffusion-webui/models")
 CONTROLNET_EXTENSION_PATH = os.environ.get(
     "CONTROLNET_EXTENSION_PATH", "/stable-diffusion-webui/extensions/sd-webui-controlnet")
-EMBEDDINGS_PATH = os.environ.get(
-    "EMBEDDINGS_PATH", "/stable-diffusion-webui/embeddings")
 
 STABLE_DIFFUSION_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Stable-diffusion")
 VAE_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "VAE")
@@ -22,8 +20,6 @@ ESRGAN_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "ESRGAN")
 REALESRGAN_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "RealESRGAN")
 CODEFORMER_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Codeformer")
 CLIP_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "BLIP")
-LORA_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "Lora")
-SWINIR_MODELS_PATH = os.path.join(MAIN_MODELS_PATH, "SwinIR")
 
 API_TIMEOUT = 300
 
@@ -37,14 +33,11 @@ class ModelDownloader():
         os.makedirs(CONTROLNET_EXTENSION_PATH, exist_ok=True)
         os.makedirs(CONTROLNET_MODELS_PATH, exist_ok=True)
         os.makedirs(CONTROLNET_ANNOTATORS_PATH, exist_ok=True)
-        os.makedirs(EMBEDDINGS_PATH, exist_ok=True)
         os.makedirs(STABLE_DIFFUSION_MODELS_PATH, exist_ok=True)
         os.makedirs(ESRGAN_MODELS_PATH, exist_ok=True)
         os.makedirs(REALESRGAN_MODELS_PATH, exist_ok=True)
-        os.makedirs(SWINIR_MODELS_PATH, exist_ok=True)
         os.makedirs(CODEFORMER_MODELS_PATH, exist_ok=True)
         os.makedirs(CLIP_MODELS_PATH, exist_ok=True)
-        os.makedirs(LORA_MODELS_PATH, exist_ok=True)
 
     def __download_model_from_url__(self, model):
         filename = model.get('filename')
@@ -88,29 +81,9 @@ models_to_download = [
         'filepath': STABLE_DIFFUSION_MODELS_PATH
     },
     {
-        'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/juggernaut_reborn.safetensors',
-        'filename': 'juggernaut-reborn.safetensors',
-        'filepath': STABLE_DIFFUSION_MODELS_PATH
-    },
-    {
         'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/sdxl_vae.safetensors',
         'filename': 'sdxl_vae.safetensors',
         'filepath': VAE_MODELS_PATH
-    },
-    {
-        'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/vae-ft-mse-840000-ema-pruned.ckpt',
-        'filename': 'vae-ft-mse-840000-ema-pruned.ckpt',
-        'filepath': VAE_MODELS_PATH
-    },
-    {
-        'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/control_v11p_sd15_canny.pth',
-        'filename': 'control_v11p_sd15_canny.pth',
-        'filepath': CONTROLNET_MODELS_PATH
-    },
-    {
-        'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/control_v11f1e_sd15_tile.pth',
-        'filename': 'control_v11f1e_sd15_tile.pth',
-        'filepath': CONTROLNET_MODELS_PATH
     },
     {
         'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/diffusers_xl_canny_full.safetensors',
@@ -143,11 +116,6 @@ models_to_download = [
         'filepath': ESRGAN_MODELS_PATH
     },
     {
-        'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/SwinIR_4x.pth',
-        'filename': 'SwinIR_4x.pth',
-        'filepath': SWINIR_MODELS_PATH
-    },
-    {
         'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/codeformer-v0.1.0.pth',
         'filename': 'codeformer-v0.1.0.pth',
         'filepath': CODEFORMER_MODELS_PATH
@@ -156,27 +124,7 @@ models_to_download = [
         'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/model_base_caption_capfilt_large.pth',
         'filename': 'model_base_caption_capfilt_large.pth',
         'filepath': CLIP_MODELS_PATH
-    },
-    {
-        'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/add_detail.safetensors',
-        'filename': 'add_detail.safetensors',
-        'filepath': LORA_MODELS_PATH
-    },
-    {
-        'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/more_details.safetensors',
-        'filename': 'more_details.safetensors',
-        'filepath': LORA_MODELS_PATH
-    },
-    {
-        'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/SDXLrender_v2.0.safetensors',
-        'filename': 'SDXLrender_v2.0.safetensors',
-        'filepath': LORA_MODELS_PATH
-    },
-    {
-        'url': 'https://storage.googleapis.com/pencil-stg-bl-sd-models/JuggernautNegative-neg.pt',
-        'filename': 'JuggernautNegative-neg.pt',
-        'filepath': EMBEDDINGS_PATH
-    },
+    }
 ]
 
 ModelDownloader().download_models(models_to_download)
