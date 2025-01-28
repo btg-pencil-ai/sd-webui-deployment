@@ -8,8 +8,22 @@ on:
       - dismissed
 
 jobs:
-  check-qa-team-approval:
-    uses: btg-pencil-ai/kube-deployment/.github/workflows/reusable-check-approvals.yaml@main
-    secrets:
-      GITHUB_APP_ID: ${{ vars.ADMIN_GITHUB_APP_ID }}
-      GITHUB_APP_PRIVATE_KEY: ${{ secrets.ADMIN_GITHUB_APP_PRIVATE_KEY }}
+  check-team-approvals:
+    runs-on: ubuntu-latest
+    if:  github.event.pull_request.base.ref == 'main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate a token
+        id: generate_token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ vars.ADMIN_GITHUB_APP_ID }}
+          private_key: ${{ secrets.ADMIN_GITHUB_APP_PRIVATE_KEY }}
+
+      - name: Run approval check
+        uses: hayawata3626/team-approval-checker@v1.0.8
+        with:
+          conditions: '[{"team": "QA", "minimumCount": 1}]'
+          github-token: ${{ steps.generate_token.outputs.token }}
