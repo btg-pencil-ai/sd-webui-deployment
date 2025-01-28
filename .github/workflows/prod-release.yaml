@@ -18,11 +18,7 @@ on:
 
 env:
   WORKLOAD_NAME: sd-webui-server
-  BUILD_RUNNER: "blacksmith-4vcpu-ubuntu-2204"
-  # DOCKERFILE_CONTEXT_PATH: .    ## Optional
-  # DOCKERFILE_PATH: ./Dockerfile
-  # DOCKER_BUILDARGS: |
-  #   --build-arg NODE_ENV=production
+
 
 
 concurrency:
@@ -57,7 +53,7 @@ jobs:
   build-image:
     name: Build Image
     needs: validate-release-version
-    runs-on: ${{ env.BUILD_RUNNER }}
+    runs-on: "blacksmith-4vcpu-ubuntu-2204"
     permissions:
       id-token: write
       contents: read
