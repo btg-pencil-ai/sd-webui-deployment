@@ -123,13 +123,35 @@ jobs:
   slack-notification:
     name: Slack Notification
     if: always()
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    runs-on: 'ubuntu-latest'
     needs:
       - validate-release-version
       - build-image
+
     steps:
-      - name: Send Slack Notification
-        uses: btg-pencil-ai/kube-deployment/workflows/composite/slack-alert@main
-        with:
-          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
+      - uses: technote-space/workflow-conclusion-action@v3.0.3
+      - name: Update slack message body
+        shell: bash
+        id: body
+        run: |
+          if [ '${{ env.WORKFLOW_CONCLUSION }}' == 'success' ]
+          then
+            echo "SLACK_MESSAGE=Success ✅" >> $GITHUB_OUTPUT
+          elif [ '${{ env.WORKFLOW_CONCLUSION }}'  == 'failure' ]
+          then
+            echo "SLACK_MESSAGE=Failed ❌" >> $GITHUB_OUTPUT
+          elif [ '${{ env.WORKFLOW_CONCLUSION }}'  == 'cancelled' ]
+          then
+            echo "SLACK_MESSAGE=Cancelled ⚠️" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_COLOR: ${{ env.WORKFLOW_CONCLUSION }} # or a specific color like 'good' or '#ff00ff'
+          SLACK_ICON: https://res.cloudinary.com/apideck/image/upload/w_196,f_auto/v1612401946/marketplaces/ckhg56iu1mkpc0b66vj7fsj3o/listings/k3l4ibtdajnvjqoclysf.png
+          SLACK_MESSAGE: ${{ steps.body.outputs.SLACK_MESSAGE }}
+          SLACK_TITLE: Build Status
+          SLACK_FOOTER: "<${{ github.server_url }}/${{ github.repository }}|${{ github.repository }}>"
+          SLACK_USERNAME: Pencil-CI
+          SLACK_WEBHOOK: ${{ vars.SLACK_WEBHOOK_URL }}
