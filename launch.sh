@@ -18,12 +18,7 @@ python3 download_models.py
 # Run and listen to port in API mode
 cd /stable-diffusion-webui
 
-if [ ${SD_VERSION} == "SD15_JUGGERNAUT_REBORN" ]; then
-    # Append flags for other cases
-    LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/juggernaut-reborn.safetensors \
-        --vae-path ${MAIN_MODELS_PATH}/VAE/vae-ft-mse-840000-ema-pruned.ckpt"
-
-elif [ ${SD_VERSION} == "SDXL" ]; then
+if [ ${SD_VERSION} == "SDXL" ]; then
     # Append flags for other cases
     LAUNCH_FLAGS="--ckpt ${MAIN_MODELS_PATH}/Stable-diffusion/sd_xl_base_1.0.safetensors \
         --vae-path ${MAIN_MODELS_PATH}/VAE/sdxl_vae.safetensors"
