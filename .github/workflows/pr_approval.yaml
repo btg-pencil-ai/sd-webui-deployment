@@ -1,4 +1,4 @@
-name: Check  QA Team Approvals
+name: Check Team Approvals
 
 on:
   pull_request_review:
@@ -25,5 +25,5 @@ jobs:
       - name: Run approval check
         uses: hayawata3626/team-approval-checker@v1.0.8
         with:
-          conditions: '[{"team": "QA", "minimumCount": 1}]'
+          conditions: '[{"team": "dev-leads", "minimumCount": 1}]'
           github-token: ${{ steps.generate_token.outputs.token }}
