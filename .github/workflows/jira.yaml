@@ -1,0 +1,61 @@
+name: Generate Jira Changelog and Update PR Body
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened 
+    branches:
+        - 'main'
+        - 'development'
+        - "epic-*"
+        - "EPIC-*"
+
+jobs:
+    generate-jira-changelog-for-pr:
+        name: Generate Jira Changelog and Update PR
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+        - uses: actions/create-github-app-token@v1
+          id: app-token
+          with:
+            app-id: ${{ vars.PENCIL_ACTION_APPID }}
+            private-key: ${{ secrets.PENCIL_ACTION_APP_PRIVATE_KEY }}
+            owner: ${{ github.repository_owner }}
+    
+        - name: Checkout
+          uses: actions/checkout@v4
+          with:
+            token: ${{ steps.app-token.outputs.token }}
+            fetch-depth: 0    
+    
+        - name: Set up Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version: '18' 
+    
+        - name: Install jira-changelog globally
+          run: |
+            npm install -g jira-changelog@2.2.0
+    
+        - name: Run jira-changelog
+          shell: bash
+          run: |
+            curl -L   -H "Accept: application/vnd.github+json"   \
+              -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}"  \
+              -H "X-GitHub-Api-Version: 2022-11-28"   \
+              https://api.github.com/repos/btg-pencil-ai/kube-deployment/contents/.github/jira/changelog.config.js?ref=main | jq -r '.content' | base64 -di > changelog.config.js
+            sed -i 's/\$JIRA_TOKEN/${{ secrets.JIRA_TOKEN }}/' ./changelog.config.js
+            sed -i 's/\$JIRA_USER/${{ vars.JIRA_USER }}/' ./changelog.config.js
+            cat changelog.config.js
+            jira-changelog --range origin/$GITHUB_BASE_REF...origin/$GITHUB_HEAD_REF > changelog.txt
+            cat changelog.txt
+    
+        - name: Update PR Body with Changelog
+          env:
+            GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          run: |
+            gh pr edit ${{ github.event.pull_request.number }} --body-file changelog.txt
+    
