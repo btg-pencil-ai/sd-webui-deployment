@@ -82,6 +82,10 @@ jobs:
         id: set-image
         run: |
           VERSION="${GITHUB_REF#refs/heads/rc/}"
+          if [[ ! $VERSION =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid release version in rc branch. Please provide a valid release version like rc/v1.0.0"
+            exit 1
+          fi          
           IMAGE_TAG="$VERSION-$GITHUB_SHA"
           echo "IMAGE=${{ env.GCLOUD_PROJECT }}/${{ vars.GAR_REPOSITORY }}/${{ env.WORKLOAD_NAME }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
           echo ":sunny: Image -->  ${{ env.GCLOUD_PROJECT }}/${{ vars.GAR_REPOSITORY }}/${{ env.WORKLOAD_NAME }}:$IMAGE_TAG" >> $GITHUB_STEP_SUMMARY  
