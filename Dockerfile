@@ -1,8 +1,7 @@
 FROM europe-docker.pkg.dev/productionapplication/pencil-prd-remote-docker-hub/sandratrypencil/stable-diffusion-webui:nvidia-cuda-12.2.0-runtime-ubuntu22.04-v5
 
 # Create a non-root user
-RUN groupadd -g 999 pencil && \
-    useradd -u 999 -g pencil
+RUN addgroup -S pencil && adduser -S -u 999 -G pencil pencil
 WORKDIR /app
 # Ensure the user has recursive permissions on all folders under /app
 RUN mkdir -p /app /resources && chown -R pencil:pencil /app /resources && \
