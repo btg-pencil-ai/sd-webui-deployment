@@ -1,4 +1,14 @@
-FROM  sandratrypencil/stable-diffusion-webui:nvidia-cuda-12.2.0-runtime-ubuntu22.04-v5
+FROM europe-docker.pkg.dev/productionapplication/pencil-prd-remote-docker-hub/sandratrypencil/stable-diffusion-webui:nvidia-cuda-12.2.0-runtime-ubuntu22.04-v5
+
+# Create a non-root user
+RUN addgroup --gid 999 pencil && \
+    adduser --uid 999 --gid 999 --disabled-password --gecos "" pencil
+
+
+WORKDIR /app
+# Ensure the user has recursive permissions on all folders under /app
+RUN mkdir -p /app /resources && chown -R pencil:pencil /app /resources && \
+    chmod -R u+rwx /app /resources
 
 ENV HF_HOME "/hf-home"
 ENV CONDA_DIR /opt/conda
@@ -17,8 +27,8 @@ RUN pip install xformers==0.0.22 accelerate==0.21.0
 RUN mkdir -p /hf-home
 
 
-COPY . /sd-webui-deployment
-WORKDIR /sd-webui-deployment
+# Copy project files after setting permissions
+COPY --chown=pencil:pencil . /app
 
 RUN pip install -r requirements.txt
 
@@ -38,5 +48,8 @@ RUN conda env remove -n worker -y
 
 # Create the worker environment
 RUN conda env create -f worker_environment.yml
+RUN chown -R pencil:pencil /app && chmod -R u+rwx /app
 
+# Switch to non-root user
+USER pencil
 #CMD ["/bin/bash", "launch.sh"]
