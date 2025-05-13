@@ -48,7 +48,8 @@ RUN conda env remove -n worker -y
 
 # Create the worker environment
 RUN conda env create -f worker_environment.yml
-RUN chown -R pencil:pencil /app && chmod -R u+rwx /app
+RUN chown -R pencil:pencil /app /stable-diffusion-webui \
+ && chmod -R u+rwx /app /stable-diffusion-webui
 
 # Switch to non-root user
 USER pencil
