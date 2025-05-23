@@ -15,6 +15,7 @@ on:
         options:
           - PRO
           - APP
+          - CN
 
 env:
   WORKLOAD_NAME: sd-webui-server
