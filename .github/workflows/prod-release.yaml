@@ -19,6 +19,7 @@ on:
 
 env:
   WORKLOAD_NAME: sd-webui-server
+  BUILD_RUNNER: "blacksmith-2vcpu-ubuntu-2204"
 
 
 
@@ -29,128 +30,35 @@ concurrency:
 
 
 jobs:
-  validate-release-version:
-    name: Validate Release Version
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    timeout-minutes: 2
+  get-env:
+    name: Get Environment Variables  ## due to this limitation https://github.com/actions/runner/issues/2372
+    runs-on: ubuntu-latest  
+    outputs:
+      WORKLOAD_NAME: ${{ steps.get-env.outputs.WORKLOAD_NAME }}
+      DOCKERFILE_CONTEXT_PATH: ${{ steps.get-env.outputs.DOCKERFILE_CONTEXT_PATH }}
+      DOCKERFILE_PATH: ${{ steps.get-env.outputs.DOCKERFILE_PATH }}
+      DOCKER_BUILDARGS: ${{ steps.get-env.outputs.DOCKER_BUILDARGS }}
+      BUILD_RUNNER: ${{ steps.get-env.outputs.BUILD_RUNNER }}
     steps:
-      - name: Validate Release Version
-        id: validate-release-version
-        shell: bash
+      - name: Get Environment Variables
+        id: get-env
         run: |
-          if [[ ! ${{ github.event.inputs.release_version }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid release version. Please provide a valid release version like v1.0.0"
-            exit 1
-          fi
-          if [[ ${{ github.ref }} != "refs/heads/main" ]]; then
-            echo "Production release can only be triggered from main branch"
-            exit 1
-          fi
-          echo "Release version is valid"
-          echo ":rocket: Release Version --> ${{ github.event.inputs.release_version }}" >> $GITHUB_STEP_SUMMARY
-          echo ":partly_sunny: Release Environment --> ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "WORKLOAD_NAME=${{ env.WORKLOAD_NAME }}" >> $GITHUB_OUTPUT
+          echo "DOCKERFILE_CONTEXT_PATH=${{ env.DOCKERFILE_CONTEXT_PATH }}" >> $GITHUB_OUTPUT
+          echo "DOCKERFILE_PATH=${{ env.DOCKERFILE_PATH }}" >> $GITHUB_OUTPUT
+          echo "DOCKER_BUILDARGS=${{ env.DOCKER_BUILDARGS }}" >> $GITHUB_OUTPUT
+          echo "BUILD_RUNNER=${{ env.BUILD_RUNNER }}" >> $GITHUB_OUTPUT
 
-  build-image:
-    name: Build Image
-    needs: validate-release-version
-    runs-on: "blacksmith-4vcpu-ubuntu-2204"
-    permissions:
-      id-token: write
-      contents: read
-    environment: ${{ github.event.inputs.environment }}
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Context for Buildx
-        shell: bash
-        run: docker context create builders
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          endpoint: builders
-
-      - uses: google-github-actions/auth@v2
-        id: auth
-        with:
-          token_format: "access_token"
-          workload_identity_provider: ${{ vars.GOOGLE_OIDC_PROVIDER }}
-          service_account: ${{ vars.GOOGLE_SERVICE_ACCOUNT }}
-
-      - name: Login to Artifact Registry ASIA
-        uses: docker/login-action@v3.1.0
-        with:
-          registry: "asia-docker.pkg.dev"
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
-
-      - name: Login to Artifact Registry US
-        uses: docker/login-action@v3.1.0
-        with:
-          registry: "us-docker.pkg.dev"
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
-
-      - name: Login to Artifact Registry Europe
-        uses: docker/login-action@v3.1.0
-        with:
-          registry: "europe-docker.pkg.dev"
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
-
-      - name: Set Image Tag
-        shell: bash
-        id: set-image
-        run: |
-          IMAGE_TAG=${{ github.event.inputs.release_version }}
-          echo "IMAGE=${{ env.GCLOUD_PROJECT }}/${{ vars.GAR_REPOSITORY }}/${{ env.WORKLOAD_NAME }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo ":sunny: Image -->  ${{ env.GCLOUD_PROJECT }}/${{ vars.GAR_REPOSITORY }}/${{ env.WORKLOAD_NAME }}:$IMAGE_TAG" >> $GITHUB_STEP_SUMMARY
-
-      - name: Build and push to GAR
-        uses: docker/build-push-action@v5.1.0
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          platforms: linux/amd64
-          provenance: false
-          tags: |
-            asia-docker.pkg.dev/${{ steps.set-image.outputs.IMAGE }}
-            us-docker.pkg.dev/${{ steps.set-image.outputs.IMAGE }}
-            europe-docker.pkg.dev/${{ steps.set-image.outputs.IMAGE }}
-
-  slack-notification:
-    name: Slack Notification
-    if: always()
-    runs-on: ubuntu-latest
-    needs:
-      - build-image
-    steps:
-        - uses: technote-space/workflow-conclusion-action@v3.0.3
-        - name: Update slack message body 
-          shell: bash
-          id: body
-          run: |
-            if [ '${{ env.WORKFLOW_CONCLUSION }}' == 'success' ]
-            then
-              echo "SLACK_MESSAGE=Success ✅" >> $GITHUB_OUTPUT
-            elif [ '${{ env.WORKFLOW_CONCLUSION }}'  == 'failure' ]
-            then
-              echo "SLACK_MESSAGE=Failed ❌" >> $GITHUB_OUTPUT
-            elif [ '${{ env.WORKFLOW_CONCLUSION }}'  == 'cancelled' ]
-            then
-              echo "SLACK_MESSAGE=Cancelled ⚠️" >> $GITHUB_OUTPUT
-            fi
-    
-        - name: Slack Notification
-          uses: rtCamp/action-slack-notify@v2
-          env:
-            SLACK_COLOR: ${{ env.WORKFLOW_CONCLUSION }} # or a specific color like 'good' or '#ff00ff'
-            SLACK_ICON: https://res.cloudinary.com/apideck/image/upload/w_196,f_auto/v1612401946/marketplaces/ckhg56iu1mkpc0b66vj7fsj3o/listings/k3l4ibtdajnvjqoclysf.png
-            SLACK_MESSAGE: ${{ steps.body.outputs.SLACK_MESSAGE }}
-            SLACK_TITLE: Build Status
-            SLACK_FOOTER: '<${{ github.server_url }}/${{ github.repository }}|${{ github.repository }}>'
-            SLACK_USERNAME: Pencil-CI
-            SLACK_WEBHOOK: ${{ vars.PRD_SLACK_WEBHOOK_URL }}
+  prod-release:
+    name: Production Release
+    uses: btg-pencil-ai/kube-deployment/.github/workflows/reusable-prod-release.yaml@main
+    needs: get-env
+    secrets: inherit
+    with:
+      release-version: ${{ github.event.inputs.release_version }}
+      environment: ${{ github.event.inputs.environment }}
+      build-runner: ${{ needs.get-env.outputs.BUILD_RUNNER }}
+      workload-name: ${{ needs.get-env.outputs.WORKLOAD_NAME }}
+      dockerfile-context-path: ${{ needs.get-env.outputs.DOCKERFILE_CONTEXT_PATH }}
+      dockerfile-path: ${{ needs.get-env.outputs.DOCKERFILE_PATH }}
+      docker-buildargs: ${{ needs.get-env.outputs.DOCKER_BUILDARGS }}

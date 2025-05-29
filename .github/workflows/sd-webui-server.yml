@@ -44,58 +44,12 @@ jobs:
 
     steps:
       - id: variable
-        name: Set environment variables
-        shell: bash
-        run: |
-          BRANCH="${GITHUB_REF#refs/heads/}"
-          ENV="${{ github.event.inputs.environment }}"
-          echo "Branch: $BRANCH"
-
-          if [ -z "$ENV" ]; then
-          case $BRANCH in
-            "dev" | "development" | "preprod")
-              ENV="stg"
-              ;;
-            INFRA*)
-              ENV="hydra"
-              ;;
-            "main" | "release-pro")
-              ENV="prd"
-              ;;
-            *)
-              echo "Environment not configured for this branch!" && exit 1
-              ;;
-          esac
-          fi
-
-          if [[ $ENV == 'prd' && $BRANCH == 'main' ]]; then
-            echo "SERVICE_ACCOUNT=${ENV}_SERVICE_ACCOUNT" >> $GITHUB_OUTPUT
-            echo "OIDC_PROVIDER=${ENV}_OIDC_PROVIDER" >> $GITHUB_OUTPUT
-            echo "GAR_REPOSITORY=pencil-app-container-registry" >> $GITHUB_OUTPUT
-          elif [[ $ENV == 'prd' || $BRANCH == 'release-pro' ]]; then
-            echo "SERVICE_ACCOUNT=${ENV}_SERVICE_ACCOUNT" >> $GITHUB_OUTPUT
-            echo "OIDC_PROVIDER=${ENV}_OIDC_PROVIDER" >> $GITHUB_OUTPUT
-            echo "GAR_REPOSITORY=pencil-pro-container-registry" >> $GITHUB_OUTPUT      
-          elif [[ $ENV == 'stg' || $ENV == 'hydra' ]]; then
-            echo "SERVICE_ACCOUNT=${ENV}_SERVICE_ACCOUNT" >> $GITHUB_OUTPUT
-            echo "OIDC_PROVIDER=${ENV}_OIDC_PROVIDER" >> $GITHUB_OUTPUT
-            echo "GAR_REPOSITORY=pencil-${ENV}-container-registry" >> $GITHUB_OUTPUT
-          else
-            echo "Branch not configured!"
-            exit 1
-          fi
-
-          echo "ENV=$ENV" >> $GITHUB_OUTPUT
-          echo "SLACK_WEBHOOK_URL=${ENV}_SLACK_WEBHOOK_URL" >> $GITHUB_OUTPUT
-
-
-          echo ":rocket: Environment --> $ENV" >> $GITHUB_STEP_SUMMARY
-          echo ":seedling: Branch --> ${GITHUB_REF#refs/heads/}" >> $GITHUB_STEP_SUMMARY
+        uses: btg-pencil-ai/kube-deployment/workflows/composite/prepare-env@main
 
   build-push-image:
     name: Build and Push Image
-    runs-on: ${{ (inputs.RUNNER) || 'blacksmith-4vcpu-ubuntu-2204' }}
-    timeout-minutes: 40
+    runs-on: ${{ (inputs.RUNNER) || 'blacksmith-2vcpu-ubuntu-2204' }}
+    timeout-minutes: 20
     permissions:
       id-token: write
       pull-requests: write
@@ -108,104 +62,15 @@ jobs:
       GAR_REPOSITORY: ${{ needs.prepare-env.outputs.GAR_REPOSITORY }}
 
     steps:
-      # - name: check avaible size
-      #   id: check-size-before
-      #   shell: bash
-      #   run: |
-      #     df -h
-      # - name: Maximize build space
-      #   uses: easimon/maximize-build-space@master
-      #   with:
-      #     root-reserve-mb: 512
-      #     swap-size-mb: 1024
-      #     remove-dotnet: 'true'
-      - name: check avaible size
-        id: check-size-after
-        shell: bash
-        run: |
-          df -h
-
-      - uses: "actions/checkout@v4"
-
-      - name: Set up Docker Context for Buildx
-        id: buildx-context
-        shell: bash
-        run: |
-          docker context create builders
-
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          endpoint: builders
-          driver: docker
-
-      - uses: "google-github-actions/auth@v2"
-        id: auth
-        with:
-          token_format: "access_token"
-          workload_identity_provider: ${{ vars[env.OIDC_PROVIDER] }}
-          service_account: ${{ vars[env.SERVICE_ACCOUNT] }}
-
-      - name: Login to Artifact Registry ASIA
-        uses: docker/login-action@v3.1.0
-        with:
-          registry: "asia-docker.pkg.dev"
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
-
-      - name: Login to Artifact Registry US
-        uses: docker/login-action@v3.1.0
-        with:
-          registry: "us-docker.pkg.dev"
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
-
-      - name: Login to Artifact Registry Europe
-        uses: docker/login-action@v3.1.0
-        with:
-          registry: "europe-docker.pkg.dev"
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
-
-      - name: Get tag
-        shell: bash
-        id: get-image
-        run: |
-          IMAGE_TAG=$GITHUB_RUN_NUMBER-${GITHUB_SHA::10}
-
-          echo "IMAGE=${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "IMAGE_LATEST=${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:latest" >> $GITHUB_OUTPUT
-          echo ":sunny: Image -->  ${{ env.GCLOUD_PROJECT }}/${{ env.GAR_REPOSITORY }}/${{ env.SERVICE_NAMES}}:$IMAGE_TAG" >> $GITHUB_STEP_SUMMARY
-
-      - name: Build and push to GAR
-        uses: docker/build-push-action@v5.3.0
-        if: ${{ env.ENV == 'stg' }}
-        with:
-          context: .
-          file: Dockerfile
-          push: true
-          no-cache: true
-          platforms: linux/amd64
-          provenance: false
-          tags: |
-            asia-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-            europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-            europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE_LATEST }}
-
-      - name: Build and push to GAR
-        uses: docker/build-push-action@v5.3.0
-        if: ${{ env.ENV == 'prd' }}
-        with:
-          context: .
-          file: Dockerfile
-          push: true
-          no-cache: true
-          platforms: linux/amd64
-          tags: |
-            asia-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-            us-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
-            europe-docker.pkg.dev/${{ steps.get-image.outputs.IMAGE }}
+    - id: build-push-image
+      uses: btg-pencil-ai/kube-deployment/workflows/composite/build-push@main
+      with: 
+        SERVICE_ACCOUNT: ${{ vars[env.SERVICE_ACCOUNT] }}
+        OIDC_PROVIDER: ${{ vars[env.OIDC_PROVIDER] }}
+        DOCKERFILE_PATH: ${{ env.DOCKERFILE_PATH }}
+        DOCKERFILE_CONTEXT_PATH:  ${{ env.DOCKERFILE_CONTEXT_PATH }}
+        DOCKER_BUILDARGS: ${{ env.DOCKER_BUILDARGS}}
+        GAR_REPOSITORY: ${{ env.GAR_REPOSITORY }}
 
   restart-hydra-deployments:
     name: Restart Hydra Deployments
@@ -223,53 +88,17 @@ jobs:
       OIDC_PROVIDER: ${{ needs.prepare-env.outputs.OIDC_PROVIDER }}
       ENV: ${{ needs.prepare-env.outputs.ENV }}
       GAR_REPOSITORY: ${{ needs.prepare-env.outputs.GAR_REPOSITORY }}
-      INFRA_REPO: kube-deployment
-
     steps:
-      - uses: actions/create-github-app-token@v1
-        id: app-token
-        with:
-          app-id: ${{ vars.PENCIL_ACTION_APPID }}
-          private-key: ${{ secrets.PENCIL_ACTION_APP_PRIVATE_KEY }}
-          repositories: ${{ env.INFRA_REPO }}
-
-      - name: Checkout Infra Repo
-        uses: actions/checkout@v4
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          repository: "${{ github.repository_owner }}/${{ env.INFRA_REPO }}"
-          ref: "main"
-          fetch-depth: "0"
-
-      - name: Set Envs
-        id: envs
-        shell: bash
-        run: |
-          echo "GKE_CLUSTER=pencil-stg-bl-gke-cluster" >> $GITHUB_OUTPUT
-          echo "GKE_REGION=europe-west1-b" >> $GITHUB_OUTPUT
-
-      - name: Setup Google Cloud auth
-        uses: "google-github-actions/auth@v2"
-        with:
-          token_format: "access_token"
-          workload_identity_provider:  ${{ vars[env.OIDC_PROVIDER] }}
-          service_account: ${{ vars[env.SERVICE_ACCOUNT] }}
-
-      - name: Setup GKE Cluster Auth
-        uses: "google-github-actions/get-gke-credentials@v2"
-        with:
-          cluster_name: ${{ steps.envs.outputs.GKE_CLUSTER }}
-          location: ${{ steps.envs.outputs.GKE_REGION }}
-
-      - name: Restart Hydra Deployments & Send Slack Alert
-        shell: bash
-        run: bash scripts/restart_hydra.sh
-        env:
-          GAR_REPOSITORY: ${{ env.GAR_REPOSITORY }}
-          GAR_IMAGE: ${{ env.SERVICE_NAMES }}
-          SLACK_WEBHOOK_URL: ${{ vars.HYDRA_SLACK_WEBHOOK_URL }}
-
-  ### slack alert
+    - id: restart-hydra-deployments
+      uses: btg-pencil-ai/kube-deployment/workflows/composite/restart-hydra@main
+      with: 
+        SERVICE_ACCOUNT: ${{ vars[env.SERVICE_ACCOUNT] }}
+        OIDC_PROVIDER: ${{ vars[env.OIDC_PROVIDER] }}
+        GAR_REPOSITORY: ${{ env.GAR_REPOSITORY }}
+        SLACK_WEBHOOK_URL: ${{ vars.HYDRA_SLACK_WEBHOOK_URL }}
+        PENCIL_ACTION_APPID: ${{ vars.PENCIL_ACTION_APPID }}
+        PENCIL_ACTION_APP_PRIVATE_KEY: ${{ secrets.PENCIL_ACTION_APP_PRIVATE_KEY }}   
+### slack alert
 
   slack-notification:
     name: Slack Notification
@@ -280,32 +109,10 @@ jobs:
       - build-push-image
       - restart-hydra-deployments
     env:
-      SLACK_WEBHOOK_URL: ${{needs.prepare-env.outputs.SLACK_WEBHOOK_URL}}
+     SLACK_WEBHOOK_URL: ${{needs.prepare-env.outputs.SLACK_WEBHOOK_URL}}
 
     steps:
-      - uses: technote-space/workflow-conclusion-action@v3.0.3
-      - name: Update slack message body
-        shell: bash
-        id: body
-        run: |
-          if [ '${{ env.WORKFLOW_CONCLUSION }}' == 'success' ]
-          then
-            echo "SLACK_MESSAGE=Success ✅" >> $GITHUB_OUTPUT
-          elif [ '${{ env.WORKFLOW_CONCLUSION }}'  == 'failure' ]
-          then
-            echo "SLACK_MESSAGE=Failed ❌" >> $GITHUB_OUTPUT
-          elif [ '${{ env.WORKFLOW_CONCLUSION }}'  == 'cancelled' ]
-          then
-            echo "SLACK_MESSAGE=Cancelled ⚠️" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_COLOR: ${{ env.WORKFLOW_CONCLUSION }} # or a specific color like 'good' or '#ff00ff'
-          SLACK_ICON: https://res.cloudinary.com/apideck/image/upload/w_196,f_auto/v1612401946/marketplaces/ckhg56iu1mkpc0b66vj7fsj3o/listings/k3l4ibtdajnvjqoclysf.png
-          SLACK_MESSAGE: ${{ steps.body.outputs.SLACK_MESSAGE }}
-          SLACK_TITLE: Build Status
-          SLACK_FOOTER: "<${{ github.server_url }}/${{ github.repository }}|${{ github.repository }}>"
-          SLACK_USERNAME: Pencil-CI
-          SLACK_WEBHOOK: ${{ vars[env.SLACK_WEBHOOK_URL] }}
+      - id: slack-notification
+        uses: btg-pencil-ai/kube-deployment/workflows/composite/slack-alert@main
+        with: 
+          SLACK_WEBHOOK_URL: ${{ vars[env.SLACK_WEBHOOK_URL] }}
