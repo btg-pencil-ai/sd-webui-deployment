@@ -109,7 +109,6 @@ jobs:
           echo ":sunny: Image -->  ${{ env.GCLOUD_PROJECT }}/${{ vars.GAR_REPOSITORY }}/${{ env.WORKLOAD_NAME }}:$IMAGE_TAG" >> $GITHUB_STEP_SUMMARY
 
       - name: Build and push to GAR
-        if: ${{ github.event.inputs.environment }} != 'CN'
         uses: docker/build-push-action@v5.1.0
         with:
           context: .
@@ -117,23 +116,9 @@ jobs:
           push: true
           platforms: linux/amd64
           provenance: false
-          tags: |
-            asia-docker.pkg.dev/${{ steps.set-image.outputs.IMAGE }}
-            us-docker.pkg.dev/${{ steps.set-image.outputs.IMAGE }}
-            europe-docker.pkg.dev/${{ steps.set-image.outputs.IMAGE }}
+          tags: ${{ github.event.inputs.environment == 'CN' && format('asia-docker.pkg.dev/{0}', steps.get-image.outputs.IMAGE) || format('asia-docker.pkg.dev/{0},us-docker.pkg.dev/{0},europe-docker.pkg.dev/{0}', steps.get-image.outputs.IMAGE) }}
 
 
-      - name: Build and push to GAR
-        if: ${{ github.event.inputs.environment }} == 'CN'
-        uses: docker/build-push-action@v5.1.0
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          platforms: linux/amd64
-          provenance: false
-          tags: |
-            asia-docker.pkg.dev/${{ steps.set-image.outputs.IMAGE }}
   slack-notification:
     name: Slack Notification
     if: always()
