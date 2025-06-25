@@ -28,7 +28,9 @@ RUN mkdir -p /hf-home
 
 
 # Copy project files after setting permissions
-COPY --chown=pencil:pencil . /app /hf-home
+COPY --chown=pencil:pencil . /app
+RUN chown -R pencil:pencil /hf-home
+
 
 RUN pip install -r requirements.txt
 
