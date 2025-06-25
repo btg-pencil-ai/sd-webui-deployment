@@ -263,7 +263,7 @@ jobs:
 
       - name: Restart Hydra Deployments & Send Slack Alert
         shell: bash
-        run: bash scripts/restart_hydra.sh
+        run: bash scripts/run_restart_hydra.sh
         env:
           GAR_REPOSITORY: ${{ env.GAR_REPOSITORY }}
           GAR_IMAGE: ${{ env.SERVICE_NAMES }}
