@@ -11,7 +11,6 @@ import uuid
 import tempfile
 from src.common.utils import acquire_redis_lock, release_redis_lock
 from src.sd_webui_proxy.constant import AI_MAGIC_TOOLS_REDIS_KEY_PREFIX
-from src.aws.aws import s3_public_url, upload_to_s3
 from src.common.redis import redis_connection
 
 import src.config as config
@@ -101,36 +100,16 @@ def get_by_redis_key(redis_key: str) -> str:
     return value
 
 def set_base64_data_to_redis(base64_image:str)->str:
-    s3_key = f"{str(uuid.uuid4())}.jpg"
-    s3_url = s3_public_url(bucket=config.S3_BUCKET,key=s3_key)
+    image_redis_key = f"{str(uuid.uuid4())}.jpg"
+    logger.info(f"Setting image base64 data to redis key:{image_redis_key}")
+    set_redis_key(image_redis_key, base64_image)
+    return image_redis_key
 
-    logger.info(f"Setting image base64 data to redis key:{s3_url}")
-    set_redis_key(s3_url, base64_image)
-    return s3_url
-
-def get_base64_data_from_redis(s3_url):
+def get_base64_data_from_redis(redis_key):
     logger.info("Re-using image base64 from redis")
-    base64_image = get_by_redis_key(redis_key=s3_url)
+    base64_image = get_by_redis_key(redis_key=redis_key)
     base64_image = base64_image.decode('utf-8')
     return base64_image
-
-def get_generated_image_s3_key(
-    base_filename: str, client_id: int, batch_uuid: str, image_ext: str
-) -> str:
-    return f"{os.path.join(base_filename,str(client_id),batch_uuid, str(uuid.uuid4()))}.{image_ext}"
-
-def upload_base64_to_s3(base64_data, s3_key):
-    with tempfile.TemporaryDirectory() as temp_dir:
-        input_image_data = base64.b64decode(base64_data)
-        file_path = os.path.join(temp_dir, f"{uuid.uuid4()}.jpg")
-        with open(file_path, "wb") as file:
-            file.write(input_image_data)
-        upload_to_s3(
-            filename=file_path,
-            bucket=config.AWS_S3_BUCKET,
-            key=s3_key,
-            public=True,
-        )
 
 def get_redis_keys_tracking_key(job_id:int) -> List:
     redis_key = f"{AI_MAGIC_TOOLS_REDIS_KEY_PREFIX}_{job_id}"
