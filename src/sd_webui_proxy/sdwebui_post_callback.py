@@ -62,14 +62,14 @@ def sd_webui_post_callback_processor(params):
             result_images = get_resized_images(images=result_images, resize_width=width, resize_height=height)
 
         # To pass it on save the base64 data to redis keys and update the tracking keys list
-        result_images_s3_urls = []
+        result_image_keys = []
         for result_image in result_images:
-            s3_url = set_base64_data_to_redis(result_image)
-            redis_keys_list.append(s3_url)
-            result_images_s3_urls.append(s3_url)
+            redis_image_key = set_base64_data_to_redis(result_image)
+            redis_keys_list.append(redis_image_key)
+            result_image_keys.append(redis_image_key)
 
         # Pass on result images references and seeds for post processing
-        callback_payload["result_images"] = result_images_s3_urls
+        callback_payload["result_images"] = result_image_keys
         callback_payload["all_seeds"] = all_seeds_list
 
         set_redis_keys_tracking_key(job_id=job_id,redis_keys_list=redis_keys_list)

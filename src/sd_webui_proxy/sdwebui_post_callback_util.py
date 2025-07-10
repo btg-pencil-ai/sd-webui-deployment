@@ -25,24 +25,24 @@ def is_controlnet_args_present(payload:SDWebUIPayload):
     )
 
 
-def replace_image_s3_url_to_base64(payload: SDWebUIPayload):
+def replace_image_keys_to_base64_images(payload: SDWebUIPayload):
     """
-    Replaces all s3 url redis keys with the corresponding base64 data so as to generate through SD WebUI
+    Replaces all redis keys with the corresponding base64 data so as to generate through SD WebUI
     """
     input_image_list = payload.get("init_images",[])
     if input_image_list is not None and len(input_image_list)>0:
-        input_image_url = input_image_list[0]
-        input_image_base64 = get_base64_data_from_redis(input_image_url)
+        input_image_key = input_image_list[0]
+        input_image_base64 = get_base64_data_from_redis(input_image_key)
         payload['init_images'] = [input_image_base64]
 
-    input_image_url = payload.get("input_image", None)
-    if(input_image_url is not None and len(input_image_url)>0):
-        input_image_base64 = get_base64_data_from_redis(input_image_url)
+    input_image_key = payload.get("input_image", None)
+    if(input_image_key is not None and len(input_image_key)>0):
+        input_image_base64 = get_base64_data_from_redis(input_image_key)
         payload['input_image'] = input_image_base64
 
-    input_image_mask_url = payload.get("mask", None)
-    if(input_image_mask_url is not None and len(input_image_mask_url)>0):
-        input_image_mask_base64 = get_base64_data_from_redis(input_image_mask_url)
+    input_image_mask_key = payload.get("mask", None)
+    if(input_image_mask_key is not None and len(input_image_mask_key)>0):
+        input_image_mask_base64 = get_base64_data_from_redis(input_image_mask_key)
         payload['mask'] = input_image_mask_base64
 
     if is_controlnet_args_present(payload) is True:
@@ -80,7 +80,7 @@ def get_generated_images(requests):
         resize_payload = payload.get("resize_payload",None)
         no_of_samples = payload.get("batch_size", None)
 
-        replace_image_s3_url_to_base64(payload)
+        replace_image_keys_to_base64_images(payload)
 
         interrogate_model = request.get("interrogate_model", None)
         if interrogate_model:
