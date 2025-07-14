@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       environment:
-        description: "Environment (APP/PRO)"
+        description: "Environment (APP/PRO/CN/ALL)"
         required: true
         type: choice
         default: "APP"
@@ -16,6 +16,7 @@ on:
           - PRO
           - APP
           - CN
+          - ALL
 
 env:
   WORKLOAD_NAME: sd-webui-server
@@ -32,7 +33,6 @@ jobs:
   validate-release-version:
     name: Validate Release Version
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
     timeout-minutes: 2
     steps:
       - name: Validate Release Version
@@ -52,14 +52,17 @@ jobs:
           echo ":partly_sunny: Release Environment --> ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
 
   build-image:
-    name: Build Image
+    name: Build Image${{ matrix.environment && format(' - {0}', matrix.environment) || format(' - {0}', github.event.inputs.environment) }}
     needs: validate-release-version
     runs-on: "blacksmith-4vcpu-ubuntu-2204"
     permissions:
       id-token: write
       contents: read
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ matrix.environment }}
     timeout-minutes: 30
+    strategy:
+      matrix:
+        environment: ${{ github.event.inputs.environment == 'ALL' && fromJSON('["PRO", "APP", "CN"]') || fromJSON(format('["{0}"]', github.event.inputs.environment)) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -116,7 +119,7 @@ jobs:
           push: true
           platforms: linux/amd64
           provenance: false
-          tags: ${{ github.event.inputs.environment == 'CN' && format('asia-docker.pkg.dev/{0}', steps.get-image.outputs.IMAGE) || format('asia-docker.pkg.dev/{0},us-docker.pkg.dev/{0},europe-docker.pkg.dev/{0}', steps.get-image.outputs.IMAGE) }}
+          tags: ${{ matrix.environment == 'CN' && format('asia-docker.pkg.dev/{0}', steps.get-image.outputs.IMAGE) || format('asia-docker.pkg.dev/{0},us-docker.pkg.dev/{0},europe-docker.pkg.dev/{0}', steps.get-image.outputs.IMAGE) }}
 
 
   slack-notification:
